@@ -12,3 +12,9 @@
 
 
 observe handshake that is initiated by client   
+
+1. Implement 3-way handshake before sending anything
+
+client  -> (SYN) SEQ=1                                            [SYN, SYN=1, ACK=0]
+            (SYN-ACK) ACK=2, SEQ=100    <- server                 [SYN, SYN=1, ACK=1]
+client  -> (ACK) ACK=101, SEQ=2                                 [NO SYN, SYN=0, ACK=1]

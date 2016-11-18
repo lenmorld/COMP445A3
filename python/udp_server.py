@@ -110,6 +110,8 @@ def handle_client(conn, data, sender):
 
             conn.sendto(syn_ack_p.to_bytes(), sender)
 
+            conn.settimeout(5)
+
             #### wait for final ACK for Handshake from Client
 
         # receives an ACK
