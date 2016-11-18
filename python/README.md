@@ -25,3 +25,11 @@ or SEQ/ACK is not the expected num,
 the handshake must be restarted
 
 either by letting it timeout, or sending a NAK
+
+
+
+
+# GET
+
+ python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get
+
