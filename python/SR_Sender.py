@@ -10,7 +10,6 @@ SYN_ACK = 3
 NAK = 5
 
 
-
 # [0,1,2,3,4,5,6,7,8]
 
 """
@@ -21,12 +20,6 @@ p = Packet(packet_type=1,
                    payload=msg.encode("utf-8"))
 
 """
-
-
-def start_timer(packet):
-	pass
-
-
 
 
 def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_port, conn):
