@@ -10,7 +10,7 @@ DATA = 0
 SYN = 1
 ACK = 2
 SYN_ACK = 3
-NAK = -1
+NAK = 5
 
 
 three_way_handshake_good = False
@@ -59,7 +59,7 @@ def start_http(conn, data, sender, p):
         print("Error: ", e)
 
     msg = "HTTP Response, last client seq_num: " + str(his_seq_num)
-    syn_ack_p = Packet(packet_type=0,
+    syn_ack_p = Packet(packet_type=DATA,
            seq_num=his_seq_num,
            peer_ip_addr=peer_ip,
            peer_port=peer_port,
@@ -100,7 +100,7 @@ def handle_client(conn, data, sender):
             my_dict_payload['msg'] = ""
             msg = json.dumps(my_dict_payload)
 
-            syn_ack_p = Packet(packet_type=3,
+            syn_ack_p = Packet(packet_type=SYN_ACK,
                    seq_num=initial_seq_num,
                    peer_ip_addr=peer_ip,
                    peer_port=peer_port,
@@ -118,6 +118,7 @@ def handle_client(conn, data, sender):
         elif packet_type == ACK:  
             # get ack from payload
             dict_payload = json.loads(his_payload)
+            ack_good = False
 
             try:
 
@@ -127,6 +128,7 @@ def handle_client(conn, data, sender):
                 # check if ack sent by client is my seq + 1
                 if his_ack == (initial_seq_num + 1):
                     three_way_handshake_good = True
+                    ack_good = True
                     print("Server side: 3 way handshake completed. Waiting for HTTP request...")
 
                 else:
@@ -136,7 +138,20 @@ def handle_client(conn, data, sender):
             except KeyError:
                 print("ACK not found in packet")
 
-                # keep waiting for correct ACK for handshake            
+            
+            # send NAK if ACK not found in payload or not the correct ACK#
+            if ack_good != True:
+                msg = "ack not receieved correctly. restart handshake"
+                nak_p = Packet(packet_type=NAK,
+                       seq_num=0,
+                       peer_ip_addr=peer_ip,
+                       peer_port=peer_port,
+                       payload=msg.encode("utf-8"))
+
+                print("Sending NAK: ")
+                conn.sendto(nak_p.to_bytes(), sender)
+
+                # conn.settimeout(5)                        
 
         elif packet_type == DATA:
             if three_way_handshake_good:

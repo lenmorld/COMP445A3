@@ -18,3 +18,10 @@ observe handshake that is initiated by client
 client  -> (SYN) SEQ=1                                            [SYN, SYN=1, ACK=0]
             (SYN-ACK) ACK=2, SEQ=100    <- server                 [SYN, SYN=1, ACK=1]
 client  -> (ACK) ACK=101, SEQ=2                                 [NO SYN, SYN=0, ACK=1]
+
+
+if at any point ACK is not found in payload where it is expected
+or SEQ/ACK is not the expected num,
+the handshake must be restarted
+
+either by letting it timeout, or sending a NAK

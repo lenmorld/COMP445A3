@@ -25,7 +25,7 @@ DATA = 0
 SYN = 1
 ACK = 2
 SYN_ACK = 3
-NAK = -1
+NAK = 5
 
 
 
@@ -95,7 +95,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
                 msg = json.dumps(my_dict_payload)
 
                 # create final ACK packet
-                ack_p = Packet(packet_type=2,
+                ack_p = Packet(packet_type=ACK,
                        seq_num=my_seq_num,
                        peer_ip_addr=peer_ip,
                        peer_port=server_port,
@@ -120,8 +120,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
                 return False
 
         elif packet_type == NAK:
-            print("NAK sent by server. CRASH AND BURN!!!")
-            print ("Redo handshake")
+            print("NAK sent by server.Redo handshake")
             return False
 
     except socket.timeout:
@@ -149,7 +148,7 @@ def run_client(router_addr, router_port, server_addr, server_port):
 
     try:     
         msg = "Put HTTP request here"
-        p = Packet(packet_type=0,
+        p = Packet(packet_type=DATA,
                    seq_num=1,
                    peer_ip_addr=peer_ip,
                    peer_port=server_port,
