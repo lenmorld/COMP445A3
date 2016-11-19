@@ -29,7 +29,38 @@ either by letting it timeout, or sending a NAK
 
 
 
+# testing GET and POST
+
+run Router
+for now without delay or lost
+
+./router_x64
+
+
+
+run Server to start in data directory, default would also work
+
+python udp_server.py --port 8007 -d data
+
 # GET
 
- python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get
+# display contents of dir
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get /
 
+# display contents of file
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get /foo
+
+
+
+# POST
+
+ python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 post -h Content-Type:application/json -f foo /foo
+
+
+
+
+### NOTES ####
+when delay introduced, handshake is delayed but still worked
+but HTTP didnt
+
+./router_x64 --drop-rate 0 --max-delay 5s
