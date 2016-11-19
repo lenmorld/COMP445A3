@@ -59,7 +59,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         conn.settimeout(5)
 
         print('Sending SYN with SEQ ', initial_seq_num)
-        print('Waiting for a response...')
+        # print('Waiting for a response...')
         
         response, sender = conn.recvfrom(1024)
         handshake_packet = Packet.from_bytes(response)

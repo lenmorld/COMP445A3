@@ -17,10 +17,10 @@ SYN_ACK = 3
 NAK = 5
 
 
-def run_client(router_addr, router_port, server_addr, server_port):
+def run_client(router_addr, router_port, server_addr, server_port, http_request):
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    timeout = 5
+    timeout = 10
 
     ### implement handshake before sending data ###
     while True:
@@ -31,23 +31,35 @@ def run_client(router_addr, router_port, server_addr, server_port):
         else:   # loop to do three_way_handshake again
             print("3-way handshake failed")
 
-
     try:     
-        msg = "Put HTTP request here"
+        # msg = "Put HTTP request here"
+        payload_data = http_request
+
+        # TODO: break payload_data into Packets[] array and send
+        # using Selective Repeat
+        # instead of sending all at once
+
         p = Packet(packet_type=DATA,
                    seq_num=1,
                    peer_ip_addr=peer_ip,
                    peer_port=server_port,
-                   payload=msg.encode("utf-8"))
+                   payload=payload_data.encode("utf-8"))
 
         # sys.exit()
 
         conn.sendto(p.to_bytes(), (router_addr, router_port))
-        print('Send "{}" to router'.format(msg))
+        print('Send "{}" to router'.format(payload_data))
+
+
+
+        # TODO: transition into SR_receiver and
+        # instead of receiving a HTTP request packet directly from conn
+        # receive Packets[] array (already converted or to convert) to an HTTP request)
+        # from SR algorithm
 
         # Try to receive a response within timeout
         conn.settimeout(timeout)
-        print('Waiting for a response')
+        # print('Waiting for a response')
         response, sender = conn.recvfrom(1024)
         p = Packet.from_bytes(response)
         print("===== HTTP Response ====")
@@ -107,6 +119,4 @@ print("=== HTTP request ===")
 print(http_request)
 print("================================")
 
-run_client(args.routerhost, args.routerport, args.serverhost, args.serverport)
-
-
+run_client(args.routerhost, args.routerport, args.serverhost, args.serverport, http_request)
