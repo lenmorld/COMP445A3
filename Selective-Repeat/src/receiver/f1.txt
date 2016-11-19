@@ -1,0 +1,1018 @@
+hello world 
+dood dodo dod 
+bnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjhhhhhh
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser\
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser
+
+USAGE
+
+httpfs [-v] [-p PORT] [-d PATH-TO-DIR]
+ -v Prints debugging messages.
+ -p Specifies the port number that the server will listen and serve at.
+ Default is 8080.
+ -d Specifies the directory that the server will use to read/write
+requested files. Default is the current directory when launching the
+application.
+
+
+USE CASES
+
+server:
+$ python httpfs.py -v -p 8081 -d data   	
+$ python httpfs.py -v -p 8081                  // uses default directory
+
+
+1. GET /    -> return list of the current files in the data dir
+
+
+client:
+
+python httpc.py get http://localhost:8081
+python httpc.py get http://localhost:8081 -v
+curl http://localhost:8081
+browser: http://127.0.0.1:8081/
+
+
+2. GET /foo   -> returns content of file named foo
+
+http://127.0.0.1:8081/abc.txt
+
+
+3. POST /foo   -> creates or overwrites foo in data/ directory
+
+python httpc.py post -h Content-Type:application/json -f foo http://localhost:8082/foo
+curl --header Content-Type:application/json --data '@foo' http://localhost:8082/foo
+
+then do GET / to check if files is there, and GET /foo to display file
+
+python httpc.py get http://localhost:8081/
+python httpc.py get http://localhost:8081/foo
+
+
+=======================================================
+ERROR- HANDLING 
+
+currenly these error codes are supported
+
+400 - Bad Request      - however bad commands are already filtered out in the client side (httpc/curl)
+						  so there is no apparent way of testing this
+404 - File Not Found   - to test try to access a non-existent file/folder in server e.g. http://localhost:8080							/blahblah
+403 - Forbidden        - to test run server with default (root) directory, and try to access root
+
+=======================================================
+DIFFERENT RESPONSE TYPES to different clients
+when a browser send request (it sends Accept header with html)
+-> display results in HTML
+
+firefox: http://localhost:8081/
+
+when httpc/cURL send request (it sends Accept header "*/*")
+-> display results in json
+
+$ curl http://localhost:8081/
+
+=======================================================
+SECURITY-HARDENING testing
+
+- normally we include working directory when starting the server [-d data]
+- if not specified, we leave the default to root [./]
+- to test leave default (because if we specify -d we are already restricted to that dir)
+		or use -d data, but try ../../ (to go back one directory)
+
+forbidden_dirs = root, git secret, and other python dirs (can add to the list in process_http_file.py)
+
+
+GET
+
+server
+$ python httpfs.py -v -p 8080
+
+client:	a 403 forbidden error will be produced
+
+browser: http://127.0.0.1:8080/         or      http://127.0.0.1:8080/secret
+curl http://localhost:8080/             
+python httpc.py get http://localhost:8080/
+
+however, this would work, since our 'data' is not forbidden
+http://127.0.0.1:8080/data/
+
+
+POST
+
+python httpc.py post -f foo http://localhost:8081/foo                --> FORBIDDEN 403
+python httpc.py post -f foo http://localhost:8081/data/foo           --> good
+(regardless if data/foo exist or not)
+
+
+to disable security, just flip the security boolean inside process_http_file.py
+with security disabled, access to http://127.0.0.1:8080/ and all its files and subdirectories will be allowed
+
+========================================================
+
+CONTENT-TYPES
+
+Server supports different Content-type for GET /file type of requests
+Currently, the server supports viewing of the binary data using httpc/curl in the terminal
+A future feature will be to be able to view/download these file types in the browser
+
+Image:  curl http://localhost:8081/flower.ico
+Image:  curl http://localhost:8081/tux.png
+
+Audio: curl http://localhost:8081/wave.mp3
+
+Video: curl http://localhost:8081/video.mp4
+Video: curl http://localhost:8081/video.3gp
+
+Application: curl http://localhost:8080/compressed.zip
+Application: curl http://localhost:8080/notepad.exe
+
+
+
+The content-types that this server can handle is limited.
+FOllowing HTTP 1.0, any unknown type is defaulted to "application/octet-stream"
+as defined here 
+https://www.w3.org/Protocols/HTTP/1.0/spec.html#BodyType
+
+========================================================
+
+CORS (Cross-Origin Resource Sharing)
+
+These 2 response headers are related to CORS mechanism (Cross-Origin Resource Sharing)
+which gives web servers cross-domain access controls
+For simple requests, we don't have to include them
+
+Access-Control-Allow-Origin: *				-> opens a door for cross-origin access by any site
+Access-Control-Allow-Credentials: true		-> allows credentials to be passed if usnig CORS, such as cookies
+
+
+
+FUTURE IMPROVEMENTS:
+Ability to view/download non-text files in the browser                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   

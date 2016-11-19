@@ -27,8 +27,6 @@ the handshake must be restarted
 either by letting it timeout, or sending a NAK
 
 
-
-
 # testing GET and POST
 
 run Router

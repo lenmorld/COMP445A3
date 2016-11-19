@@ -66,7 +66,6 @@ def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_por
 	# packets_sent_unacked = []
 	# packets_sent_acked = []
 
-
 	# keep sending until all packets are sent successfully
 	while (packets_success_ctr < num_packets_to_send):
 		# p_seq_num = p.seq_num        # for now we assume our start_counter corresponds with packet's seq_num
