@@ -1,4 +1,5 @@
 import time
+import json
 from packet import Packet
 
 
@@ -27,10 +28,12 @@ def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_por
 	# packets_to_send is final, it is a representation of HTTP request/response
 	# assume it is a list
 	# packets_to_send = [p0,p1,p2]
-	# assume seq_num starts with 0
+	# assume seq_num is in range [0,1,2,3,4,5,6,7]
 
+	# k = 3
+	# 2^k - 1
 
-	window_size = 4
+	window_size = 4				# static for now
 	start_counter = 0
 	timeout = 5
 
@@ -55,13 +58,17 @@ def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_por
 
 	for p in packets_to_send:
 		dict1 = {}
-		dict1['seq'] = p.seq_num
+		# dict1['seq'] = p.seq_num
+
+		p_seq_num = p.seq_num
+		dict1['packet'] = p
 		dict1['sent'] = False
 		dict1['acked'] = False
 		dict1['timer'] = time.time()  # this effectively starts timer for this one
 		dict1['timed_out'] = False
 
-		packets.append(dict1)
+		# packets.append(dict1)
+		packets[p_seq_num] = dict1
 
 	# packets_sent_unacked = []
 	# packets_sent_acked = []
@@ -76,7 +83,7 @@ def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_por
 		for j in window_size_range:
 			# if  packets[j]['seq'] in window_size_range:
 
-			send_packet = packets[j]
+			send_packet = packets[j]['packet']
 
 			# only send if this one is un-acked, and not sent yet or have to be re-sent due to timeout
 			if packets[j]['acked'] == False :
@@ -113,7 +120,7 @@ def sr_sender(packets_to_send, router_addr, router_port, server_addr, server_por
         		# packets_sent_acked.append(start_counter)
 
         		# slide window
-        		start_counter += 1
+        		start_counter = (start_counter + 1 ) % window_size
         		window_size_range = list(range(start_counter, start_counter+window_size))
 
         	else:
