@@ -2,12 +2,14 @@ import argparse
 import ipaddress
 import socket
 import json
+import pprint
 
 from packet import Packet
 import sys
 
 import httpc
 import handshake
+import SR_helper
 
 # packet types
 DATA = 0
@@ -15,6 +17,7 @@ SYN = 1
 ACK = 2
 SYN_ACK = 3
 NAK = 5
+
 
 
 def run_client(router_addr, router_port, server_addr, server_port, http_request):
@@ -33,39 +36,56 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
 
     try:     
         # msg = "Put HTTP request here"
-        payload_data = http_request
+
+
+        packets = SR_helper.prepare_SR(peer_ip, server_port, http_request)
+
 
         # TODO: break payload_data into Packets[] array and send
         # using Selective Repeat
         # instead of sending all at once
 
-        p = Packet(packet_type=DATA,
-                   seq_num=1,
-                   peer_ip_addr=peer_ip,
-                   peer_port=server_port,
-                   payload=payload_data.encode("utf-8"))
 
-        # sys.exit()
+        ################### PUT SR_Sender call here #################
+        # SR_Sender(packets)
 
+        p = packets[0]
         conn.sendto(p.to_bytes(), (router_addr, router_port))
-        print('Send "{}" to router'.format(payload_data))
+        print('Send "{}" to router'.format(p))
+
+        ###############################################################
 
 
+        ###### WAIT TO RECEIVE HTTP RESPONSE #####
+        # print('Waiting for a response')
+
+        # Try to receive a response within timeout
+        conn.settimeout(timeout)
 
         # TODO: transition into SR_receiver and
         # instead of receiving a HTTP request packet directly from conn
         # receive Packets[] array (already converted or to convert) to an HTTP request)
         # from SR algorithm
 
-        # Try to receive a response within timeout
-        conn.settimeout(timeout)
-        # print('Waiting for a response')
+
+        ################### PUT SR_Receiver call here #################
+        # packets_from_SR = SR_Receiver()
+        packets_from_SR = []
+        ###############################################################
+
+
+        # for now, assume we are only getting one packet and we can decode it right away
         response, sender = conn.recvfrom(1024)
+        
+        # do this for all received packets from SR
         p = Packet.from_bytes(response)
+        packets_from_SR.append(p)
+
+        http_response_final, peer_ip, server_port = SR_helper.SR_to_appmessage(packets_from_SR)
+
         print("===== HTTP Response ====")
         print('Router: ', sender)
-        print('Packet: ', p)
-        print('Payload: ' + p.payload.decode("utf-8"))
+        print(http_response_final)
 
     except socket.timeout:
         print('No response after {}s'.format(timeout))

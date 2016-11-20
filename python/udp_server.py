@@ -2,11 +2,16 @@ import argparse
 import socket
 import json
 import pprint
+import sys
 
 import os
 
+
+
 from packet import Packet
 import process_http_file
+import SR_helper
+
 
 # packet types
 DATA = 0
@@ -15,6 +20,7 @@ ACK = 2
 SYN_ACK = 3
 NAK = 5
 
+PAYLOAD_MAX_SIZE = 1013      # bytes
 
 three_way_handshake_good = False
 
@@ -36,6 +42,7 @@ after successfull handshake, data is then sent by client and should be accepted 
 """
 
 
+
 def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
     while True:
@@ -46,45 +53,47 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
         ############################################
 
-        data, sender = conn.recvfrom(1024)
 
-        p = Packet.from_bytes(data)
+        ################### PUT SR_Receiver call here #################
+        # packets_from_SR = SR_Receiver()
+        packets_from_SR = []
+        ###############################################################
 
-        packet_type = p.packet_type
-        http_request_seq_num = p.seq_num
-        peer_ip = p.peer_ip_addr
-        peer_port = p.peer_port 
-        http_request = p.payload.decode("utf-8")
 
+        # for now, assume we are only getting one packet and we can decode it right away
+
+        request, sender = conn.recvfrom(1024)
+
+        # do this for all received packets from SR
+        p = Packet.from_bytes(request)
+        packets_from_SR.append(p)
+
+        http_request, peer_ip, peer_port = SR_helper.SR_to_appmessage(packets_from_SR)
+
+        # assume at this point we have HTTP request
+        print("===== HTTP request ======")
+        print(http_request)
 
         #############################################
 
-        # assume at this point we have HTTP request
-
-        print("===== HTTP request ======")
-        print("Router: ", sender)
-        print("Packet: ", p)
-        print("Payload: ", http_request)
-        print("Packet Type: ", packet_type)
-
-
+        
         # formulate response by invoking httpfs
         http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
         print(http_response)
 
+        packets = SR_helper.prepare_SR(peer_ip, peer_port, http_response)
+
         # TODO transition to a sender and send HTTP response through SR
 
-        # conn.sendall(bytes(processed_data, "UTF-8")) 
-        # send response
+        ################### PUT SR_Sender call here #################
+        # SR_Sender(packets)
 
-        http_response_seq_num = http_request_seq_num + 1
-        http_response_packet = Packet(packet_type=DATA,
-               seq_num=http_request_seq_num,
-               peer_ip_addr=peer_ip,
-               peer_port=peer_port,
-               payload=http_response.encode("utf-8"))
+        p = packets[0]
+        conn.sendto(p.to_bytes(), sender)
+        print('Send "{}" to router'.format(p))
 
-        conn.sendto(http_response_packet.to_bytes(), sender)
+        ###############################################################
+
 
         print("HTTP Response sent")
 
