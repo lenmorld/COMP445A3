@@ -16,11 +16,12 @@ class ReceiverWindowManager:
         self.sizeArray = [0] * self.windowSize
         self.windowStart = 0
         self.windowEnd = self.windowSize
-    def receivePacket(self, sequenceNumber):
+    def receivePacket(self, sequenceNumber,buf):
         if(self.isValidSequenceNumber(sequenceNumber)):
             index = self.sequenceToWindowIndex(sequenceNumber)
-            if(self.sequenceArray[sequenceNumber] is False):
-                self.sequenceArray[sequenceNumber] = True
+            if(self.sequenceArray[index] is False):
+                self.sequenceArray[index] = True
+                self.bufferArray[index] = buf
             else:
                 print("need to resend stuff")
     def moveWindow(self):
