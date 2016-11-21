@@ -85,8 +85,6 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
             packet_from_SR = rWindowManager.moveWindow()
 
-            
-
             # for each packet received, send ACK
             for p_s in packet_from_SR:
 

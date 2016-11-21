@@ -5,6 +5,7 @@ Created on Nov 19, 2016
 '''
 
 from packet import Packet
+import pprint
 
 class ReceiverWindowManager:
     def __init__(self, sequenceSize):
@@ -46,10 +47,15 @@ class ReceiverWindowManager:
         result = []
         while(self.sequenceArray[self.windowStart]):
             print("moving the actual window")
-            self.windowStart = (self.windowStart + 1) % self.windowSize
-            self.windowEnd = (self.windowEnd + 1) % self.windowEnd
+            # self.windowStart = (self.windowStart + 1) % self.windowSize
+            # self.windowEnd = (self.windowEnd + 1) % self.windowEnd
+            self.windowStart = (self.windowStart + 1) % self.sequenceSize
+            self.windowEnd = (self.windowEnd + 1) % self.sequenceSize            
             self.sequenceArray[self.windowEnd] = False
+            print("buffer length", len(self.bufferArray))
+            pprint.pprint(self.bufferArray)
             pack = self.bufferArray.pop(0)
+            self.bufferArray.append(None)
             #print("in movewindow")
             print(pack)
             # print(type(pack))
@@ -69,6 +75,13 @@ class ReceiverWindowManager:
         return index
 
     def isValidSequenceNumber(self, sequenceNumber):
+        print("IF VALID SEQNUM")
+        print("Seq num: ", sequenceNumber)
+        print("Sequence size: ", self.sequenceSize)
+        print("Window size: ", self.windowSize)
+        print("Window start: ", self.windowStart)
+        print("Window end: ", self.windowEnd)   
+
         if(self.windowStart < self.windowEnd):
             if(self.windowStart <= sequenceNumber and sequenceNumber < self.windowEnd):
                 return True
