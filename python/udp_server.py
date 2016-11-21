@@ -66,7 +66,7 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
         # for now, assume we are only getting one packet and we can decode it right away
 
 
-        expected_packet_num = 1
+        expected_packet_num = 10
         received_packets = 0
         request, sender = conn.recvfrom(1024)
         # do this for all received packets from SR
@@ -77,47 +77,43 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
         while packet_type == DATA:
 
+            print("receive packet# ", seq_num)
+
             rWindowManager.receivePacket(seq_num, p)
 
             # packets_from_SR.append(p)
 
             packet_from_SR = rWindowManager.moveWindow()
 
+            
+
+            # for each packet received, send ACK
             for p_s in packet_from_SR:
-                # send ACK
 
+                print("Packet to be ACKed: ", p_s.seq_num)
+                msg = ""
+                # create ACK packet with ACK# in seq_num
+                ack_p = Packet(packet_type=ACK,
+                       seq_num=p_s.seq_num,
+                       peer_ip_addr=p_s.peer_ip_addr,
+                       peer_port=p_s.peer_port,
+                       payload=msg.encode("utf-8"))
 
+                print("sending ACK: ", p_s.seq_num)
+                conn.sendto(ack_p.to_bytes(), sender)
 
-                # # create ACK packet, ack will be in payload since we dont have ACK in the Packet data structure
-                # my_dict_payload = {}
-                # my_dict_payload['ack'] = my_ack
-                # my_dict_payload['msg'] = ""
-                # msg = json.dumps(my_dict_payload)
-
-                # # create final ACK packet
-                # ack_p = Packet(packet_type=ACK,
-                #        seq_num=my_seq_num,
-                #        peer_ip_addr=peer_ip,
-                #        peer_port=server_port,
-                #        payload=msg.encode("utf-8"))
-
-                # print("sending ACK: ", my_ack, " SEQ:", my_seq_num)
-
-                # conn.sendto(ack_p.to_bytes(), sender)
-                # print("ACK sent... We could also piggyback data here")
-                # conn.settimeout(5)
-                
+                received_packets += 1
 
             # packets_from_SR.append(packet_from_SR)
             packets_from_SR += packet_from_SR
-            received_packets += 1
-
+            
 
             # print("payload of p:")
             # print(p.payload.decode("utf-8"))
             
             # next packet
             # conn.settimeout(15)
+
             if received_packets < expected_packet_num:
                 print("**** next packet ****")
                 request, sender = conn.recvfrom(1024)
@@ -129,6 +125,7 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
                 # do this for all received packets from SR
                 p = Packet.from_bytes(request)
                 packet_type = p.packet_type
+                seq_num = p.seq_num
             else:
                 break
 

@@ -70,21 +70,51 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
                 # print(p.payload.decode("utf-8"))
 
                 p_seq_num = p.seq_num
+
                 print('Send "{}" to router'.format(p))
                 windowManager.pushPacket(p)
                 conn.sendto(p.to_bytes(),(router_addr,router_port))
                 print ("send packet number", p_seq_num)
                 indexSent = indexSent+1
+
+                input()
+
             #handle receivec packets here
+
+            # conn.setblocking(0)
+            try:
+                data, sender = conn.recvfrom(1024)
+                p = Packet.from_bytes(data)
+                packet_type = p.packet_type
+            except:
+                print("No ACK yet")
+                packet_type = None
             
+            while packet_type == ACK:
+                ack_num = p.seq_num
+                windowManager.receiveAck(ack_num)
+                indexReceived = indexReceived+1
+                print("ACK#  received", ack_num)
+
+                # get next ACK
+                print("wait for next ACK")
+
+                conn.setblocking(0)
+                # data, sender = conn.recvfrom(1024)
+
+                try:
+                    data, sender = conn.recvfrom(1024)
+                    p = Packet.from_bytes(data)
+                    packet_type = p.packet_type
+                except:
+                    print("No ACK yet")
 
 
-            windowManager.receiveAck(indexReceived)
-            indexReceived = indexReceived+1
-            print("index received",indexReceived)
+
             windowManager.moveWindow()
             #hanlde socket timeout
             resendList = windowManager.resendPacket()
+
             for p in resendList:
                 conn.sendto(p.to_bytes(),(router_addr,router_port))
                 print('Send "{}" to router'.format(p))

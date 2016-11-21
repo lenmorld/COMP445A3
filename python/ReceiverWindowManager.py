@@ -19,12 +19,22 @@ class ReceiverWindowManager:
         self.windowStart = 0
         self.windowEnd = self.windowSize
 
+        print("CONSTRUCTOR---")
+        print("Sequence size: ", self.sequenceSize)
+        print("Window size: ", self.windowSize)
+        print("Window start: ", self.windowStart)
+        print("Window end: ", self.windowEnd)               
+
     def receivePacket(self, sequenceNumber,buf):
 
+        print("Received packet: ", sequenceNumber)
+        print(buf)
         if(self.isValidSequenceNumber(sequenceNumber)):
+            print("Valid seq")
             # index = self.sequenceToWindowIndex(sequenceNumber)
             index = sequenceNumber
             if(self.sequenceArray[index] is False):
+                print("Actual receive")
                 self.sequenceArray[index] = True
                 self.bufferArray[index] = buf
                 print("")
@@ -32,13 +42,16 @@ class ReceiverWindowManager:
                 print("need to resend ACK")
 
     def moveWindow(self):
+        print("in move window")
         result = []
         while(self.sequenceArray[self.windowStart]):
+            print("moving the actual window")
             self.windowStart = (self.windowStart + 1) % self.windowSize
             self.windowEnd = (self.windowEnd + 1) % self.windowEnd
             self.sequenceArray[self.windowEnd] = False
             pack = self.bufferArray.pop(0)
-            # print("in movewindow")
+            #print("in movewindow")
+            print(pack)
             # print(type(pack))
             result.append(pack)
             #result.append()
