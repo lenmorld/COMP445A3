@@ -51,9 +51,10 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         ################### PUT SR_Sender call here #################
         # SR_Sender(packets)
         
-        p = packets[0]
+        # p = packets[0]
+
         #conn.sendto(p.to_bytes(), (router_addr, router_port))
-        print('Send "{}" to router'.format(p))
+        # print('Send "{}" to router'.format(p))
         
         ###############################################################
 
@@ -64,13 +65,20 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         while(indexReceived <len(packets)):            
             while (windowManager.needMorePacket() and indexSent<len(packets)):
                 p = packets[indexSent]
+
+                # print("payload of p:")
+                # print(p.payload.decode("utf-8"))
+
+                p_seq_num = p.seq_num
                 print('Send "{}" to router'.format(p))
                 windowManager.pushPacket(p)
                 conn.sendto(p.to_bytes(),(router_addr,router_port))
-                print ("send packet number",indexSent)
+                print ("send packet number", p_seq_num)
                 indexSent = indexSent+1
             #handle receivec packets here
             
+
+
             windowManager.receiveAck(indexReceived)
             indexReceived = indexReceived+1
             print("index received",indexReceived)

@@ -54,6 +54,12 @@ def SR_to_appmessage(packets):
     http_message = ""
 
     # we assume all of them have the same host:port
+    
+    # pprint.pprint(packets[0])
+    # print(packets[0].payload)
+    # print(type(packets))
+    # print(type(packets[0]))
+    # print(packets[0].payload.decode("utf-8"))
     peer_ip = packets[0].peer_ip_addr
     server_port = packets[0].peer_port
 
@@ -61,8 +67,6 @@ def SR_to_appmessage(packets):
     for p in packets:
         http_message += p.payload.decode("utf-8")
          
-
-
 
     print("HTTP message assembled from SR:")
     print(http_message)

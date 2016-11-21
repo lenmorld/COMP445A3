@@ -49,6 +49,7 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
     rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
     while True:
 
+
         # TODO: instead of receiving a HTTP request packet directly from conn
         # receive Packets[] array (already converted or to convert) to an HTTP request)
         # from SR algorithm
@@ -64,19 +65,85 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
         # for now, assume we are only getting one packet and we can decode it right away
 
-        request, sender = conn.recvfrom(1024)
 
+        expected_packet_num = 1
+        received_packets = 0
+        request, sender = conn.recvfrom(1024)
         # do this for all received packets from SR
         p = Packet.from_bytes(request)
+
         packet_type = p.packet_type
-        if packet_type == DATA:
-            packets_from_SR.append(p)
-            #rWindowManager.
-                                           
-            
-            
+        seq_num = p.seq_num
+
+        while packet_type == DATA:
+
+            rWindowManager.receivePacket(seq_num, p)
+
+            # packets_from_SR.append(p)
+
+            packet_from_SR = rWindowManager.moveWindow()
+
+            for p_s in packet_from_SR:
+                # send ACK
 
 
+
+                # # create ACK packet, ack will be in payload since we dont have ACK in the Packet data structure
+                # my_dict_payload = {}
+                # my_dict_payload['ack'] = my_ack
+                # my_dict_payload['msg'] = ""
+                # msg = json.dumps(my_dict_payload)
+
+                # # create final ACK packet
+                # ack_p = Packet(packet_type=ACK,
+                #        seq_num=my_seq_num,
+                #        peer_ip_addr=peer_ip,
+                #        peer_port=server_port,
+                #        payload=msg.encode("utf-8"))
+
+                # print("sending ACK: ", my_ack, " SEQ:", my_seq_num)
+
+                # conn.sendto(ack_p.to_bytes(), sender)
+                # print("ACK sent... We could also piggyback data here")
+                # conn.settimeout(5)
+                
+
+            # packets_from_SR.append(packet_from_SR)
+            packets_from_SR += packet_from_SR
+            received_packets += 1
+
+
+            # print("payload of p:")
+            # print(p.payload.decode("utf-8"))
+            
+            # next packet
+            # conn.settimeout(15)
+            if received_packets < expected_packet_num:
+                print("**** next packet ****")
+                request, sender = conn.recvfrom(1024)
+                print(request, sender)
+                print("Type of sender" ,type(sender))
+                if sender == None:
+                    break
+
+                # do this for all received packets from SR
+                p = Packet.from_bytes(request)
+                packet_type = p.packet_type
+            else:
+                break
+
+
+        ###### APP LAYER ##########
+        print("SR result Packet[]")
+        print("after SR")
+        for pp in packets_from_SR:
+            print(type(p))
+            print(p.payload)
+            print(p.seq_num)
+            print(p.peer_ip_addr)
+
+
+        # pprint.pprint(packets_from_SR)
         http_request, peer_ip, peer_port = SR_helper.SR_to_appmessage(packets_from_SR)
 
         # assume at this point we have HTTP request
@@ -84,7 +151,6 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
         print(http_request)
 
         #############################################
-
         
         # formulate response by invoking httpfs
         http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
@@ -100,12 +166,9 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
         p = packets[0]
         conn.sendto(p.to_bytes(), sender)
         print('Send "{}" to router'.format(p))
-
         ###############################################################
 
-
         print("HTTP Response sent")
-
 
 def run_server(host, port, directory, isVerb):
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

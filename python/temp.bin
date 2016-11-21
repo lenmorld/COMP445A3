@@ -1,13 +1,13 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Sun, 20 Nov 2016 03:31:25 GMT
+Date: Mon, 21 Nov 2016 08:46:13 GMT
 Content-Type: application/json
-Content-Length: 267
+Content-Length: 659
 Connection: close
 
 {
-    "data": "Files found\r\nFiles inside directory:\r\n['foo', 'cat.txt', 'bar']",
+    "data": "Files found\r\nFiles inside directory:\r\n['foo', 'process_http_file.py', 'SR_Receiver.py', 'SR_Sender.py', 'cat.txt', 'udp_client.py', 'HttpClientLib.py', 'handshake.py', 'bar', 'COMP445_A3.sublime-project', 'process_http.py', '__pycache__', 'httpc.py', 'README.md_old', 'SenderWindowManager.py', 'f1.txt', 'data', 'udp_server.py', 'temp.bin', 'ReceiverWindowManager.py', 'COMP445_A3.sublime-workspace', 'httpfs.py', 'packet.py', 'SR_helper.py', 'README.md']",
     "headers": {
         "Accept": "*/*",
         "Host": "localhost",
