@@ -10,6 +10,7 @@ import sys
 import httpc
 import handshake
 import SR_helper
+import SenderWindowManager
 
 # packet types
 DATA = 0
@@ -31,7 +32,7 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
             print("Cleint side: 3-way handshake successful"), conn
             print("Sending HTTP Request")
             break
-        else:   # loop to do three_way_handshake again
+        else:  # loop to do three_way_handshake again
             print("3-way handshake failed")
 
     try:     
@@ -39,6 +40,7 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
 
 
         packets = SR_helper.prepare_SR(peer_ip, server_port, http_request)
+        print("packet length ", len(packets))
 
 
         # TODO: break payload_data into Packets[] array and send
@@ -48,14 +50,42 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
 
         ################### PUT SR_Sender call here #################
         # SR_Sender(packets)
-
+        
         p = packets[0]
-        conn.sendto(p.to_bytes(), (router_addr, router_port))
+        #conn.sendto(p.to_bytes(), (router_addr, router_port))
         print('Send "{}" to router'.format(p))
-
+        
         ###############################################################
 
-
+        windowManager =SenderWindowManager.SenderWindowManager(len(packets))
+        indexReceived=0
+        indexSent=0;
+        index=0
+        while(indexReceived <len(packets)):            
+            while (windowManager.needMorePacket() and indexSent<len(packets)):
+                p = packets[indexSent]
+                print('Send "{}" to router'.format(p))
+                windowManager.pushPacket(p)
+                conn.sendto(p.to_bytes(),(router_addr,router_port))
+                print ("send packet number",indexSent)
+                indexSent = indexSent+1
+            #handle receivec packets here
+            
+            windowManager.receiveAck(indexReceived)
+            indexReceived = indexReceived+1
+            print("index received",indexReceived)
+            windowManager.moveWindow()
+            #hanlde socket timeout
+            resendList = windowManager.resendPacket()
+            for p in resendList:
+                conn.sendto(p.to_bytes(),(router_addr,router_port))
+                print('Send "{}" to router'.format(p))
+            if windowManager.isBuffering():
+                pass
+            else:
+                break
+        
+        
         ###### WAIT TO RECEIVE HTTP RESPONSE #####
         # print('Waiting for a response')
 

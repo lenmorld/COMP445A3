@@ -11,6 +11,7 @@ import os
 from packet import Packet
 import process_http_file
 import SR_helper
+import ReceiverWindowManager
 
 
 # packet types
@@ -44,7 +45,8 @@ after successfull handshake, data is then sent by client and should be accepted 
 
 
 def process_http_request(conn, host, port, data, directory, sender, isVerb):
-
+    # need to decide on a fixed window size
+    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
     while True:
 
         # TODO: instead of receiving a HTTP request packet directly from conn
@@ -66,7 +68,14 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
 
         # do this for all received packets from SR
         p = Packet.from_bytes(request)
-        packets_from_SR.append(p)
+        packet_type = p.packet_type
+        if packet_type == DATA:
+            packets_from_SR.append(p)
+            #rWindowManager.
+                                           
+            
+            
+
 
         http_request, peer_ip, peer_port = SR_helper.SR_to_appmessage(packets_from_SR)
 
