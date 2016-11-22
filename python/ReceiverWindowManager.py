@@ -32,11 +32,11 @@ class ReceiverWindowManager:
         print(buf)
         if(self.isValidSequenceNumber(sequenceNumber)):
             print("Valid seq")
-            # index = self.sequenceToWindowIndex(sequenceNumber)
-            index = sequenceNumber
-            if(self.sequenceArray[index] is False):
+            index = self.sequenceToWindowIndex(sequenceNumber)
+            #index = sequenceNumber
+            if(self.sequenceArray[sequenceNumber] is False):
                 print("Actual receive")
-                self.sequenceArray[index] = True
+                self.sequenceArray[sequenceNumber] = True
                 self.bufferArray[index] = buf
                 print("")
             else:
