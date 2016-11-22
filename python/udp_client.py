@@ -24,11 +24,16 @@ NAK = 5
 def run_client(router_addr, router_port, server_addr, server_port, http_request):
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    timeout = 10
+    timeout = 30
+
+
+    packets = SR_helper.prepare_SR(peer_ip, server_port, http_request)
+    num_packets = len(packets)
+    print("packet length ", num_packets)
 
     ### implement handshake before sending data ###
     while True:
-        if handshake.three_way_handshake(router_addr, router_port, server_addr, server_port, conn):
+        if handshake.three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
             print("Cleint side: 3-way handshake successful"), conn
             print("Sending HTTP Request")
             break
@@ -39,8 +44,7 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         # msg = "Put HTTP request here"
 
 
-        packets = SR_helper.prepare_SR(peer_ip, server_port, http_request)
-        print("packet length ", len(packets))
+
 
 
         # TODO: break payload_data into Packets[] array and send
@@ -58,12 +62,12 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         
         ###############################################################
 
-        windowManager =SenderWindowManager.SenderWindowManager(len(packets))
+        windowManager =SenderWindowManager.SenderWindowManager(num_packets)
         indexReceived=0
         indexSent=0;
         index=0
         while(indexReceived <len(packets)):            
-            while (windowManager.needMorePacket() and indexSent<len(packets)):
+            while (windowManager.needMorePacket() and indexSent<num_packets):
                 p = packets[indexSent]
 
                 # print("payload of p:")
@@ -99,16 +103,42 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
                 # get next ACK
                 print("wait for next ACK")
 
-                conn.setblocking(0)
+                # conn.setblocking(0)
                 # data, sender = conn.recvfrom(1024)
-
                 try:
                     data, sender = conn.recvfrom(1024)
                     p = Packet.from_bytes(data)
                     packet_type = p.packet_type
                 except:
                     print("No ACK yet")
+                    packet_type = None
 
+            # conn.settimeout(5)
+            # try:
+                
+            #     data, sender = conn.recvfrom(1024)
+            #     p = Packet.from_bytes(data)
+            #     packet_type = p.packet_type
+            # except:
+            #     print("No ack yet")
+
+            # while packet_type == ACK:
+            #     ack_num = p.seq_num
+            #     windowManager.receiveAck(ack_num)
+            #     indexReceived = indexReceived+1
+            #     print("ACK#  received", ack_num)
+
+            #     # get next ACK
+            #     print("wait for next ACK")
+
+            #     conn.settimeout(5)
+            #     try:
+                    
+            #         data, sender = conn.recvfrom(1024)
+            #         p = Packet.from_bytes(data)
+            #         packet_type = p.packet_type
+            #     except:
+            #         print("No ACK yet")
 
 
             windowManager.moveWindow()

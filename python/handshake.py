@@ -28,7 +28,7 @@ SYN_ACK = 3
 NAK = 5
 
 
-def three_way_handshake(router_addr, router_port, server_addr, server_port, conn):
+def three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
 
     # ---> just use conn from run_client, we won't create seperate conn for handshake
@@ -90,6 +90,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
                 my_dict_payload = {}
                 my_dict_payload['ack'] = my_ack
                 my_dict_payload['msg'] = ""
+                my_dict_payload['num_packets'] = num_packets    # include num of packets expected
                 msg = json.dumps(my_dict_payload)
 
                 # create final ACK packet

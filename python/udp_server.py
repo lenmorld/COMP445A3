@@ -42,11 +42,17 @@ after successfull handshake, data is then sent by client and should be accepted 
 
 """
 
-
-
-def process_http_request(conn, host, port, data, directory, sender, isVerb):
+def process_http_request(conn, host, port, data, directory, sender, isVerb, num_packets):
     # need to decide on a fixed window size
-    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
+
+    conn.settimeout(30)
+
+    print("Expected num of packets: ", num_packets)
+
+    # rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
+
+    # supply num of packets expected from client
+    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(num_packets)
     while True:
 
 
@@ -66,7 +72,8 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb):
         # for now, assume we are only getting one packet and we can decode it right away
 
 
-        expected_packet_num = 10
+        # expected_packet_num = 10
+        expected_packet_num = num_packets
         received_packets = 0
         request, sender = conn.recvfrom(1024)
         # do this for all received packets from SR
@@ -199,9 +206,9 @@ def run_server(host, port, directory, isVerb):
         # for t in threads:
         #     t.join()
 
-        conn, data, sender = three_way_handshake(conn)
+        conn, data, sender, num_packets = three_way_handshake(conn)
         print("Handshake done")
-        process_http_request(conn, host, port, data, directory, sender, isVerb)
+        process_http_request(conn, host, port, data, directory, sender, isVerb, num_packets)
 
     finally:
         conn.close()
@@ -213,6 +220,8 @@ def run_server(host, port, directory, isVerb):
 def three_way_handshake(conn):
     initial_seq_num = 500 
     global three_way_handshake_good
+
+    num_packets = None
 
     while three_way_handshake_good != True:
 
@@ -267,6 +276,8 @@ def three_way_handshake(conn):
                 try:
 
                     his_ack = dict_payload['ack']
+                    num_packets = dict_payload['num_packets']
+
                     print("received final handshake ACK: ", his_ack, " SEQ: ", his_seq_num)
 
                     # check if ack sent by client is my seq + 1
@@ -323,7 +334,7 @@ def three_way_handshake(conn):
         except Exception as e:
             print("Error: ", e)
 
-    return conn, data, sender
+    return conn, data, sender, num_packets
 
 
 dir_path = os.getcwd()
