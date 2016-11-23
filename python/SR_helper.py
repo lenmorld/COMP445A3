@@ -2,6 +2,10 @@ import sys
 import pprint
 from packet import Packet
 
+import SenderWindowManager
+import ReceiverWindowManager
+
+
 PAYLOAD_MAX_SIZE = 1013      # bytes
 
 # packet types
@@ -73,4 +77,214 @@ def SR_to_appmessage(packets):
 
 
     return http_message, peer_ip, server_port
+
+def SR_Sender(router_addr, router_port, conn, packets):
+
+
+    num_packets = len(packets)
+    print("packet length ", num_packets)
+
+    windowManager =SenderWindowManager.SenderWindowManager(num_packets)
+    indexReceived=0
+    indexSent=0;
+    index=0
+    while(indexReceived < num_packets):  
+        print("indexReceived: ", indexReceived)
+        print("num_packets: ", num_packets)
+
+        while (windowManager.needMorePacket() and indexSent<num_packets):
+            p = packets[indexSent]
+
+            # print("payload of p:")
+            # print(p.payload.decode("utf-8"))
+
+            p_seq_num = p.seq_num
+
+            print('Send "{}" to router'.format(p))
+            windowManager.pushPacket(p)
+            conn.sendto(p.to_bytes(),(router_addr,router_port))
+            print ("send packet number", p_seq_num)
+            indexSent = indexSent+1
+
+            # input()
+
+        #handle receivec packets here
+
+        # conn.setblocking(0)
+        try:
+            data, sender = conn.recvfrom(1024)
+            p = Packet.from_bytes(data)
+            packet_type = p.packet_type
+        except:
+            print("No ACK yet")
+            packet_type = None
+        
+        while packet_type == ACK:
+            ack_num = p.seq_num
+            windowManager.receiveAck(ack_num)
+            indexReceived = indexReceived+1
+            print("ACK#  received", ack_num)
+
+            # get next ACK
+            print("wait for next ACK")
+
+            # conn.setblocking(0)
+            # data, sender = conn.recvfrom(1024)
+            try:
+                data, sender = conn.recvfrom(1024)
+                p = Packet.from_bytes(data)
+                packet_type = p.packet_type
+            except:
+                print("No ACK yet")
+                packet_type = None
+
+        # conn.settimeout(5)
+        # try:
+            
+        #     data, sender = conn.recvfrom(1024)
+        #     p = Packet.from_bytes(data)
+        #     packet_type = p.packet_type
+        # except:
+        #     print("No ack yet")
+
+        # while packet_type == ACK:
+        #     ack_num = p.seq_num
+        #     windowManager.receiveAck(ack_num)
+        #     indexReceived = indexReceived+1
+        #     print("ACK#  received", ack_num)
+
+        #     # get next ACK
+        #     print("wait for next ACK")
+
+        #     conn.settimeout(5)
+        #     try:
+                
+        #         data, sender = conn.recvfrom(1024)
+        #         p = Packet.from_bytes(data)
+        #         packet_type = p.packet_type
+        #     except:
+        #         print("No ACK yet")
+
+
+        print("indexReceived: ", indexReceived)
+        print("num_packets: ", num_packets)
+
+        # if indexReceived < num_packets:
+
+        windowManager.moveWindow()
+        #hanlde socket timeout
+        resendList = windowManager.resendPacket()
+
+        for p in resendList:
+            conn.sendto(p.to_bytes(),(router_addr,router_port))
+            print('Send "{}" to router'.format(p))
+        if windowManager.isBuffering():
+            pass
+        else:
+            break
+
+
+def SR_Receiver(conn, num_packets):
+
+    # conn.settimeout(5)
+
+    print("Expected num of packets: ", num_packets)
+
+    # rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
+
+    # supply num of packets expected from client
+    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(num_packets)
+
+
+    # TODO: instead of receiving a HTTP request packet directly from conn
+    # receive Packets[] array (already converted or to convert) to an HTTP request)
+    # from SR algorithm
+
+    ############################################
+
+
+    ################### PUT SR_Receiver call here #################
+    # packets_from_SR = SR_Receiver()
+    packets_from_SR = []
+    ###############################################################
+
+    # for now, assume we are only getting one packet and we can decode it right away
+
+    # expected_packet_num = 10
+    expected_packet_num = num_packets
+    received_packets = 0
+    request, sender = conn.recvfrom(1024)
+    # do this for all received packets from SR
+    p = Packet.from_bytes(request)
+
+    packet_type = p.packet_type
+    seq_num = p.seq_num
+
+
+
+    print("here")
+
+    while packet_type == DATA:
+
+        print("receive packet# ", seq_num)
+
+        rWindowManager.receivePacket(seq_num, p)
+
+        # packets_from_SR.append(p)
+
+        packet_from_SR = rWindowManager.moveWindow()
+
+        # for each packet received, send ACK
+        for p_s in packet_from_SR:
+
+            print("Packet to be ACKed: ", p_s.seq_num)
+            msg = ""
+            # create ACK packet with ACK# in seq_num
+            ack_p = Packet(packet_type=ACK,
+                   seq_num=p_s.seq_num,
+                   peer_ip_addr=p_s.peer_ip_addr,
+                   peer_port=p_s.peer_port,
+                   payload=msg.encode("utf-8"))
+
+            print("sending ACK: ", p_s.seq_num)
+            conn.sendto(ack_p.to_bytes(), sender)
+
+            received_packets += 1
+
+        # packets_from_SR.append(packet_from_SR)
+        packets_from_SR += packet_from_SR
+        
+
+        # print("payload of p:")
+        # print(p.payload.decode("utf-8"))
+        
+        # next packet
+        # conn.settimeout(15)
+
+        if received_packets < expected_packet_num:
+            print("**** next packet ****")
+            request, sender = conn.recvfrom(1024)
+            print(request, sender)
+            print("Type of sender" ,type(sender))
+            if sender == None:
+                break
+
+            # do this for all received packets from SR
+            p = Packet.from_bytes(request)
+            packet_type = p.packet_type
+            seq_num = p.seq_num
+        else:
+            break
+
+
+    ###### APP LAYER ##########
+    print("SR result Packet[]")
+    print("after SR")
+    for pp in packets_from_SR:
+        print(type(p))
+        print(p.payload)
+        print(p.seq_num)
+        print(p.peer_ip_addr)
+
+    return packets_from_SR, sender
 

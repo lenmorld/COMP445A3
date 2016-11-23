@@ -20,16 +20,15 @@ SYN_ACK = 3
 NAK = 5
 
 
-
 def run_client(router_addr, router_port, server_addr, server_port, http_request):
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    timeout = 30
+    timeout = 10
 
 
     packets = SR_helper.prepare_SR(peer_ip, server_port, http_request)
     num_packets = len(packets)
-    print("packet length ", num_packets)
+    # print("packet length ", num_packets)
 
     ### implement handshake before sending data ###
     while True:
@@ -42,9 +41,6 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
 
     try:     
         # msg = "Put HTTP request here"
-
-
-
 
 
         # TODO: break payload_data into Packets[] array and send
@@ -62,100 +58,12 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         
         ###############################################################
 
-        windowManager =SenderWindowManager.SenderWindowManager(num_packets)
-        indexReceived=0
-        indexSent=0;
-        index=0
-        while(indexReceived <len(packets)):            
-            while (windowManager.needMorePacket() and indexSent<num_packets):
-                p = packets[indexSent]
 
-                # print("payload of p:")
-                # print(p.payload.decode("utf-8"))
-
-                p_seq_num = p.seq_num
-
-                print('Send "{}" to router'.format(p))
-                windowManager.pushPacket(p)
-                conn.sendto(p.to_bytes(),(router_addr,router_port))
-                print ("send packet number", p_seq_num)
-                indexSent = indexSent+1
-
-                input()
-
-            #handle receivec packets here
-
-            # conn.setblocking(0)
-            try:
-                data, sender = conn.recvfrom(1024)
-                p = Packet.from_bytes(data)
-                packet_type = p.packet_type
-            except:
-                print("No ACK yet")
-                packet_type = None
-            
-            while packet_type == ACK:
-                ack_num = p.seq_num
-                windowManager.receiveAck(ack_num)
-                indexReceived = indexReceived+1
-                print("ACK#  received", ack_num)
-
-                # get next ACK
-                print("wait for next ACK")
-
-                # conn.setblocking(0)
-                # data, sender = conn.recvfrom(1024)
-                try:
-                    data, sender = conn.recvfrom(1024)
-                    p = Packet.from_bytes(data)
-                    packet_type = p.packet_type
-                except:
-                    print("No ACK yet")
-                    packet_type = None
-
-            # conn.settimeout(5)
-            # try:
-                
-            #     data, sender = conn.recvfrom(1024)
-            #     p = Packet.from_bytes(data)
-            #     packet_type = p.packet_type
-            # except:
-            #     print("No ack yet")
-
-            # while packet_type == ACK:
-            #     ack_num = p.seq_num
-            #     windowManager.receiveAck(ack_num)
-            #     indexReceived = indexReceived+1
-            #     print("ACK#  received", ack_num)
-
-            #     # get next ACK
-            #     print("wait for next ACK")
-
-            #     conn.settimeout(5)
-            #     try:
-                    
-            #         data, sender = conn.recvfrom(1024)
-            #         p = Packet.from_bytes(data)
-            #         packet_type = p.packet_type
-            #     except:
-            #         print("No ACK yet")
-
-
-            windowManager.moveWindow()
-            #hanlde socket timeout
-            resendList = windowManager.resendPacket()
-
-            for p in resendList:
-                conn.sendto(p.to_bytes(),(router_addr,router_port))
-                print('Send "{}" to router'.format(p))
-            if windowManager.isBuffering():
-                pass
-            else:
-                break
+        SR_helper.SR_Sender(router_addr, router_port,  conn, packets)
         
         
         ###### WAIT TO RECEIVE HTTP RESPONSE #####
-        # print('Waiting for a response')
+        print('Waiting for a response')
 
         # Try to receive a response within timeout
         conn.settimeout(timeout)
@@ -168,16 +76,19 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
 
         ################### PUT SR_Receiver call here #################
         # packets_from_SR = SR_Receiver()
-        packets_from_SR = []
+
+        print("SR receiving response")
+
+        packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
         ###############################################################
 
-
-        # for now, assume we are only getting one packet and we can decode it right away
-        response, sender = conn.recvfrom(1024)
+        # packets_from_SR = []
+        # # for now, assume we are only getting one packet and we can decode it right away
+        # response, sender = conn.recvfrom(1024)
         
-        # do this for all received packets from SR
-        p = Packet.from_bytes(response)
-        packets_from_SR.append(p)
+        # # do this for all received packets from SR
+        # p = Packet.from_bytes(response)
+        # packets_from_SR.append(p)
 
         http_response_final, peer_ip, server_port = SR_helper.SR_to_appmessage(packets_from_SR)
 

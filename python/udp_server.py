@@ -45,104 +45,11 @@ after successfull handshake, data is then sent by client and should be accepted 
 def process_http_request(conn, host, port, data, directory, sender, isVerb, num_packets):
     # need to decide on a fixed window size
 
-    conn.settimeout(30)
 
-    print("Expected num of packets: ", num_packets)
-
-    # rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
-
-    # supply num of packets expected from client
-    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(num_packets)
     while True:
 
 
-        # TODO: instead of receiving a HTTP request packet directly from conn
-        # receive Packets[] array (already converted or to convert) to an HTTP request)
-        # from SR algorithm
-
-        ############################################
-
-
-        ################### PUT SR_Receiver call here #################
-        # packets_from_SR = SR_Receiver()
-        packets_from_SR = []
-        ###############################################################
-
-
-        # for now, assume we are only getting one packet and we can decode it right away
-
-
-        # expected_packet_num = 10
-        expected_packet_num = num_packets
-        received_packets = 0
-        request, sender = conn.recvfrom(1024)
-        # do this for all received packets from SR
-        p = Packet.from_bytes(request)
-
-        packet_type = p.packet_type
-        seq_num = p.seq_num
-
-        while packet_type == DATA:
-
-            print("receive packet# ", seq_num)
-
-            rWindowManager.receivePacket(seq_num, p)
-
-            # packets_from_SR.append(p)
-
-            packet_from_SR = rWindowManager.moveWindow()
-
-            # for each packet received, send ACK
-            for p_s in packet_from_SR:
-
-                print("Packet to be ACKed: ", p_s.seq_num)
-                msg = ""
-                # create ACK packet with ACK# in seq_num
-                ack_p = Packet(packet_type=ACK,
-                       seq_num=p_s.seq_num,
-                       peer_ip_addr=p_s.peer_ip_addr,
-                       peer_port=p_s.peer_port,
-                       payload=msg.encode("utf-8"))
-
-                print("sending ACK: ", p_s.seq_num)
-                conn.sendto(ack_p.to_bytes(), sender)
-
-                received_packets += 1
-
-            # packets_from_SR.append(packet_from_SR)
-            packets_from_SR += packet_from_SR
-            
-
-            # print("payload of p:")
-            # print(p.payload.decode("utf-8"))
-            
-            # next packet
-            # conn.settimeout(15)
-
-            if received_packets < expected_packet_num:
-                print("**** next packet ****")
-                request, sender = conn.recvfrom(1024)
-                print(request, sender)
-                print("Type of sender" ,type(sender))
-                if sender == None:
-                    break
-
-                # do this for all received packets from SR
-                p = Packet.from_bytes(request)
-                packet_type = p.packet_type
-                seq_num = p.seq_num
-            else:
-                break
-
-
-        ###### APP LAYER ##########
-        print("SR result Packet[]")
-        print("after SR")
-        for pp in packets_from_SR:
-            print(type(p))
-            print(p.payload)
-            print(p.seq_num)
-            print(p.peer_ip_addr)
+        packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
 
 
         # pprint.pprint(packets_from_SR)
@@ -154,6 +61,8 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
 
         #############################################
         
+        print("sending http response")
+
         # formulate response by invoking httpfs
         http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
         print(http_response)
@@ -165,9 +74,12 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
         ################### PUT SR_Sender call here #################
         # SR_Sender(packets)
 
-        p = packets[0]
-        conn.sendto(p.to_bytes(), sender)
-        print('Send "{}" to router'.format(p))
+        print("SR seding http response")
+        SR_helper.SR_Sender(sender[0], sender[1],  conn, packets)
+
+        # p = packets[0]
+        # conn.sendto(p.to_bytes(), sender)
+        # print('Send "{}" to router'.format(p))
         ###############################################################
 
         print("HTTP Response sent")
