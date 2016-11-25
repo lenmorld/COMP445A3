@@ -187,7 +187,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
     print("left loop")
 def SR_Receiver(conn, num_packets):
 
-    # conn.settimeout(5)
+    conn.settimeout(50)
 
     print("Expected num of packets: ", num_packets)
 

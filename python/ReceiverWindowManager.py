@@ -33,6 +33,7 @@ class ReceiverWindowManager:
         if(self.isValidSequenceNumber(sequenceNumber)):
             print("Valid seq")
             index = self.sequenceToWindowIndex(sequenceNumber)
+            print("index of actual value ",index)
             #index = sequenceNumber
             if(self.sequenceArray[sequenceNumber] is False):
                 print("Actual receive")
@@ -44,6 +45,8 @@ class ReceiverWindowManager:
 
     def moveWindow(self):
         print("in move window")
+        pprint.pprint(self.bufferArray)
+        print("did not make it to good part of move window yet")
         result = []
         while(self.sequenceArray[self.windowStart]):
             print("moving the actual window")
@@ -53,6 +56,7 @@ class ReceiverWindowManager:
             self.windowEnd = (self.windowEnd + 1) % self.sequenceSize            
             self.sequenceArray[self.windowEnd] = False
             print("buffer length", len(self.bufferArray))
+            #printing the buffer array not seeing this now
             pprint.pprint(self.bufferArray)
             pack = self.bufferArray.pop(0)
             self.bufferArray.append(None)
@@ -87,7 +91,7 @@ class ReceiverWindowManager:
                 return True
             else:
                 return False
-            if(self.windowEnd < self.windowStart):
+        if(self.windowEnd < self.windowStart):
                 if(sequenceNumber < self.windowEnd or self.windowStart <= sequenceNumber):
                     return True
                 else:
