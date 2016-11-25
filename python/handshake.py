@@ -29,6 +29,9 @@ NAK = 5
 
 
 def three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
+
+    timeout = 10
+
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
 
     # ---> just use conn from run_client, we won't create seperate conn for handshake
@@ -56,7 +59,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         # wait for SYN-ACK
 
         # Try to receive a response within timeout
-        conn.settimeout(15)
+        conn.settimeout(timeout)
 
         print('Sending SYN with SEQ ', initial_seq_num)
         # print('Waiting for a response...')
@@ -104,7 +107,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
 
                 conn.sendto(ack_p.to_bytes(), sender)
                 print("ACK sent... We could also piggyback data here")
-                conn.settimeout(5)
+                conn.settimeout(timeout)
 
                 ####### 3-way handshake good #########
 

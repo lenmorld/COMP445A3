@@ -15,6 +15,7 @@ ACK = 2
 SYN_ACK = 3
 NAK = 5
 FINAL_ACK = 6
+FINAL_ACK_B = 7
 
 
 def prepare_SR(peer_ip, server_port, payload):
@@ -84,7 +85,7 @@ def SR_to_appmessage(packets):
 
 def SR_Sender(router_addr, router_port, conn, packets):
 
-    timeout = 20
+    timeout = 7
 
     receiver_ip = None
     receiver_port = None
@@ -121,6 +122,9 @@ def SR_Sender(router_addr, router_port, conn, packets):
 
         #handle receivec packets here
 
+        # conn.settimeout(timeout)
+
+        ### RECEIVE ACKs ####
         # conn.setblocking(0)
         try:
             data, sender = conn.recvfrom(1024)
@@ -144,39 +148,10 @@ def SR_Sender(router_addr, router_port, conn, packets):
             try:
                 data, sender = conn.recvfrom(1024)
                 p = Packet.from_bytes(data)
-
-
                 packet_type = p.packet_type
             except:
                 print("No ACK yet")
                 packet_type = None
-
-        # conn.settimeout(5)
-        # try:
-            
-        #     data, sender = conn.recvfrom(1024)
-        #     p = Packet.from_bytes(data)
-        #     packet_type = p.packet_type
-        # except:
-        #     print("No ack yet")
-
-        # while packet_type == ACK:
-        #     ack_num = p.seq_num
-        #     windowManager.receiveAck(ack_num)
-        #     indexReceived = indexReceived+1
-        #     print("ACK#  received", ack_num)
-
-        #     # get next ACK
-        #     print("wait for next ACK")
-
-        #     conn.settimeout(5)
-        #     try:
-                
-        #         data, sender = conn.recvfrom(1024)
-        #         p = Packet.from_bytes(data)
-        #         packet_type = p.packet_type
-        #     except:
-        #         print("No ACK yet")
 
 
         print("indexReceived: ", indexReceived)
@@ -203,8 +178,6 @@ def SR_Sender(router_addr, router_port, conn, packets):
             print("you killed the loop")
             break
 
-
-        
     # final ack if all ACKs are received
 
     msg = ""   # no payload in handshake
@@ -225,7 +198,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 10
+    timeout = 5
 
     print("Expected num of packets: ", num_packets)
 

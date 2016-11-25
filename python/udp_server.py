@@ -23,7 +23,7 @@ NAK = 5
 
 PAYLOAD_MAX_SIZE = 1013      # bytes
 
-three_way_handshake_good = False
+
 
 address = '127.0.0.1'
 
@@ -133,15 +133,17 @@ def run_server(host, port, directory, isVerb):
 
 
 def three_way_handshake(conn):
+
+    three_way_handshake_good = False
     initial_seq_num = 500 
-    global three_way_handshake_good
+    # global three_way_handshake_good
 
     data = None
     sender = None
 
     num_packets = None
 
-    timeout = 5
+    timeout = 15
 
 
     while three_way_handshake_good != True:
