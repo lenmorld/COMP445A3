@@ -1,7 +1,7 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Fri, 25 Nov 2016 09:11:48 GMT
+Date: Fri, 25 Nov 2016 09:59:21 GMT
 Content-Type: application/json
 Content-Length: 325
 Connection: close
@@ -13,6 +13,6 @@ Connection: close
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8030",
-    "url": "127.0.0.1:8030/foo"
+    "origin": "127.0.0.1:8034",
+    "url": "127.0.0.1:8034/foo"
 }

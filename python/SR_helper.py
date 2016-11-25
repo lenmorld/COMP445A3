@@ -81,11 +81,9 @@ def SR_to_appmessage(packets):
     return http_message, peer_ip, server_port
 
 
-
-
 def SR_Sender(router_addr, router_port, conn, packets):
 
-    timeout = 7
+    timeout = 10
 
     receiver_ip = None
     receiver_port = None
@@ -133,6 +131,13 @@ def SR_Sender(router_addr, router_port, conn, packets):
         except:
             print("No ACK yet")
             packet_type = None
+
+
+        ####################################################################
+        if packet_type == FINAL_ACK_B:
+            print("Receiver received everything. HTTP transaction complete")
+            break
+        ####################################################################
         
         while packet_type == ACK:
             ack_num = p.seq_num
@@ -198,7 +203,10 @@ def SR_Sender(router_addr, router_port, conn, packets):
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 5
+    timeout = 10
+
+    receiver_ip = None
+    receiver_port = None
 
     print("Expected num of packets: ", num_packets)
 
@@ -264,6 +272,9 @@ def SR_Receiver(conn, num_packets):
                        peer_port=p_s.peer_port,
                        payload=msg.encode("utf-8"))
 
+                receiver_ip = p_s.peer_ip_addr
+                receiver_port = p_s.peer_port
+
                 print("sending ACK: ", p_s.seq_num)
                 conn.sendto(ack_p.to_bytes(), sender)
 
@@ -303,6 +314,23 @@ def SR_Receiver(conn, num_packets):
 
     print("either finish or final ACK received")
 
+    ###########################################################
+    # final ack if all ACKs are received
+
+    msg = ""   # no payload in handshake
+    p = Packet(packet_type=7,
+               seq_num=1,
+               peer_ip_addr=receiver_ip,
+               peer_port=receiver_port,
+               payload=msg.encode("utf-8"))
+
+    # send SYN packet
+    conn.sendto(p.to_bytes(), sender)
+    conn.settimeout(timeout)
+
+    print("sending final ACK to finalize HTTP transaction")
+    ###############################################################
+
     ###### APP LAYER ##########
     print("SR result Packet[]")
     print("after SR")
@@ -313,3 +341,8 @@ def SR_Receiver(conn, num_packets):
         print(p.peer_ip_addr)
 
     return packets_from_SR, sender
+
+
+    # alert Sender that everything received
+
+

@@ -1,0 +1,346 @@
+"""
+process http_file
+
+HTTP File Server Library that uses the HTTP Server library (process_http)
+
+used for processing requests involve in a file server
+used by httpfs
+
+relies on process_http on building responses
+
+processReq takes the request from httpfs
+ performs file manipulation and security checks
+ produces info directory contents list/ file contents / error messages
+ then calls process_http to package this info into an http response
+"""
+
+import process_http
+import os
+import sys
+import threading
+
+root_dir = os.getcwd()
+# dir_path  = os.path.dirname(os.path.realpath(__file__))   # same thing as os.getcwd()
+security = True
+working_dir = 'data'   # even though default dir (./) is chosen at server run, 
+					   # 'data' will be the 'file server working directory'
+
+### security ####
+forbidden_dirs = ['secret', 'old', '__pycache__', '.git']			# add here all forbidden dirs other than root
+# formulate path for each forbidden dir
+forbidden_dir_paths = [os.path.join(os.sep, root_dir, f) for f in forbidden_dirs]
+# add root to forbidden dir
+forbidden_dir_paths.append(root_dir)
+
+# see dirs that are not forbidden
+not_forbidden_paths = [f for f in os.listdir(os.getcwd()) if ( os.path.isdir(f) and (f not in forbidden_dirs) )]
+
+
+"""
+decode_non_text
+
+decodes non-text files such as image, audio, binary, etc
+
+"""
+def decode_non_text(fileName, lock):
+	with lock:
+		with open(fileName, mode='rb') as file:    # read part as binary
+		    fileContent = file.read()
+
+	# print(fileContent)
+	return fileContent
+
+
+"""
+process_Req
+
+input:
+- data: full unparsed HTTP request
+- addr: client IP address
+- port: port that the server is running
+- directory: working dir of file server, root (./) if not selected
+- isVerb: verbosity on/off
+
+output:
+- http_response in proper format
+"""
+def process_Req(data, addr, port, directory, isVerb):
+	
+	verbose = isVerb
+	directory = os.path.join(os.sep, root_dir , directory)
+	global lock 
+	lock = threading.Lock()
+	access_allowed = True
+	found = True
+	dir_found = True
+	request = process_http.get_command_details(data, verbose)
+
+	if request == None:
+		print("### ...listening at port " + str(port) +"....")
+		return None
+
+	reqType = request['command']
+	path = request['path']			# /foo , /foo/foo
+	request_body = request['body']
+
+	if verbose:
+		print("Operation: " + reqType)
+		print("URL requested: " + path)
+	# print("### working dir: " + directory)
+	if path in ['/', '\\']:
+		full_file_path = os.path.join(os.sep, directory, '')		# -> /data/
+	else:
+		if path[0] == '/':
+			path = path[1:]		# remove / that causes bug in joining paths
+		full_file_path = os.path.join(os.sep, directory, path)
+	# print("### full file path: " + full_file_path)
+
+	# get filename from given path, #e.g. /abc.txt   -> abc.txt, /data/ -> data
+	fileName = os.path.basename(full_file_path)			# get file
+	# get directory from given path, #e.g. /foo/bar/fi -> bar, /foo/bar/ -> bar 
+	directory = os.path.dirname(full_file_path)		    # get dir
+
+	# print("### path is " + path)
+	# print("### request is " + reqType)
+	# print("### server directory : " + directory)
+	# print("### fileName is " + fileName)
+
+	# initialize response body components
+	response_body = {}
+	response_body['lines'] = None
+	response_body['files'] = None
+	response_body['title'] = ""
+	response_body['message'] = ""
+	response_body['error'] = -1
+	response_body['requested_file'] = None
+	response_body['file_type'] = 'text'
+
+	######### SECURITY HARDENING ################
+	# this applies mainly if default directory is chosen when running the server
+	# and when a file/dir is accessed in the root dir
+	# 'data' will always be the working directory if not selected
+	#    e.g.  localhost:8081/httpfs.py   should be forbidden
+	#          localhost:8081/			  should be forbidden
+	#          localhost:8081/data/abc.txt should be allowed
+	#############################################
+
+	### print(full_file_path)
+
+
+"""
+process http_file
+
+HTTP File Server Library that uses the HTTP Server library (process_http)
+
+used for processing requests involve in a file server
+used by httpfs
+
+relies on process_http on building responses
+
+processReq takes the request from httpfs
+ performs file manipulation and security checks
+ produces info directory contents list/ file contents / error messages
+ then calls process_http to package this info into an http response
+"""
+
+import process_http
+import os
+import sys
+import threading
+
+root_dir = os.getcwd()
+# dir_path  = os.path.dirname(os.path.realpath(__file__))   # same thing as os.getcwd()
+security = True
+working_dir = 'data'   # even though default dir (./) is chosen at server run, 
+					   # 'data' will be the 'file server working directory'
+
+### security ####
+forbidden_dirs = ['secret', 'old', '__pycache__', '.git']			# add here all forbidden dirs other than root
+# formulate path for each forbidden dir
+forbidden_dir_paths = [os.path.join(os.sep, root_dir, f) for f in forbidden_dirs]
+# add root to forbidden dir
+forbidden_dir_paths.append(root_dir)
+
+# see dirs that are not forbidden
+not_forbidden_paths = [f for f in os.listdir(os.getcwd()) if ( os.path.isdir(f) and (f not in forbidden_dirs) )]
+
+
+"""
+decode_non_text
+
+decodes non-text files such as image, audio, binary, etc
+
+"""
+def decode_non_text(fileName, lock):
+	with lock:
+		with open(fileName, mode='rb') as file:    # read part as binary
+		    fileContent = file.read()
+
+	# print(fileContent)
+	return fileContent
+
+
+"""
+process_Req
+
+input:
+- data: full unparsed HTTP request
+- addr: client IP address
+- port: port that the server is running
+- directory: working dir of file server, root (./) if not selected
+- isVerb: verbosity on/off
+
+output:
+- http_response in proper format
+"""
+def process_Req(data, addr, port, directory, isVerb):
+	
+	verbose = isVerb
+	directory = os.path.join(os.sep, root_dir , directory)
+	global lock 
+	lock = threading.Lock()
+	access_allowed = True
+	found = True
+	dir_found = True
+	request = process_http.get_command_details(data, verbose)
+
+	if request == None:
+		print("### ...listening at port " + str(port) +"....")
+		return None
+
+	reqType = request['command']
+	path = request['path']			# /foo , /foo/foo
+	request_body = request['body']
+
+	if verbose:
+		print("Operation: " + reqType)
+		print("URL requested: " + path)
+	# print("### working dir: " + directory)
+	if path in ['/', '\\']:
+		full_file_path = os.path.join(os.sep, directory, '')		# -> /data/
+	else:
+		if path[0] == '/':
+			path = path[1:]		# remove / that causes bug in joining paths
+		full_file_path = os.path.join(os.sep, directory, path)
+	# print("### full file path: " + full_file_path)
+
+	# get filename from given path, #e.g. /abc.txt   -> abc.txt, /data/ -> data
+	fileName = os.path.basename(full_file_path)			# get file
+	# get directory from given path, #e.g. /foo/bar/fi -> bar, /foo/bar/ -> bar 
+	directory = os.path.dirname(full_file_path)		    # get dir
+
+	# print("### path is " + path)
+	# print("### request is " + reqType)
+	# print("### server directory : " + directory)
+	# print("### fileName is " + fileName)
+
+	# initialize response body components
+	response_body = {}
+	response_body['lines'] = None
+	response_body['files'] = None
+	response_body['title'] = ""
+	response_body['message'] = ""
+	response_body['error'] = -1
+	response_body['requested_file'] = None
+	response_body['file_type'] = 'text'
+
+	######### SECURITY HARDENING ################
+	# this applies mainly if default directory is chosen when running the server
+	# and when a file/dir is accessed in the root dir
+	# 'data' will always be the working directory if not selected
+	#    e.g.  localhost:8081/httpfs.py   should be forbidden
+	#          localhost:8081/			  should be forbidden
+	#          localhost:8081/data/abc.txt should be allowed
+	#############################################
+
+	### print(full_file_path)
+
+"""
+process http_file
+
+HTTP File Server Library that uses the HTTP Server library (process_http)
+
+used for processing requests involve in a file server
+used by httpfs
+
+relies on process_http on building responses
+
+processReq takes the request from httpfs
+ performs file manipulation and security checks
+ produces info directory contents list/ file contents / error messages
+ then calls process_http to package this info into an http response
+"""
+
+import process_http
+import os
+import sys
+import threading
+
+root_dir = os.getcwd()
+# dir_path  = os.path.dirname(os.path.realpath(__file__))   # same thing as os.getcwd()
+security = True
+working_dir = 'data'   # even though default dir (./) is chosen at server run, 
+					   # 'data' will be the 'file server working directory'
+
+### security ####
+forbidden_dirs = ['secret', 'old', '__pycache__', '.git']			# add here all forbidden dirs other than root
+# formulate path for each forbidden dir
+forbidden_dir_paths = [os.path.join(os.sep, root_dir, f) for f in forbidden_dirs]
+# add root to forbidden dir
+forbidden_dir_paths.append(root_dir)
+
+# see dirs that are not forbidden
+not_forbidden_paths = [f for f in os.listdir(os.getcwd()) if ( os.path.isdir(f) and (f not in forbidden_dirs) )]
+
+
+"""
+decode_non_text
+
+decodes non-text files such as image, audio, binary, etc
+
+"""
+def decode_non_text(fileName, lock):
+	with lock:
+		with open(fileName, mode='rb') as file:    # read part as binary
+		    fileContent = file.read()
+
+	# print(fileContent)
+	return fileContent
+
+
+"""
+process_Req
+
+input:
+- data: full unparsed HTTP request
+- addr: client IP address
+- port: port that the server is running
+- directory: working dir of file server, root (./) if not selected
+- isVerb: verbosity on/off
+
+output:
+- http_response in proper format
+"""
+def process_Req(data, addr, port, directory, isVerb):
+	
+	verbose = isVerb
+	directory = os.path.join(os.sep, root_dir , directory)
+	global lock 
+	lock = threading.Lock()
+	access_allowed = True
+	found = True
+	dir_found = True
+	request = process_http.get_command_details(data, verbose)
+
+	if request == None:
+		print("### ...listening at port " + str(port) +"....")
+		return None
+
+	reqType = request['command']
+	path = request['path']			# /foo , /foo/foo
+	request_body = request['body']
+
+
+
+
+
