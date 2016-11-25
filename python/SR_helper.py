@@ -169,7 +169,13 @@ def SR_Sender(router_addr, router_port, conn, packets):
         print("indexReceived: ", indexReceived)
         print("num_packets: ", num_packets)
 
-        # if indexReceived < num_packets:
+        if indexReceived >= num_packets:
+            print("received all packets")
+            print("index received", indexReceived)
+            print("total packets sent",num_packets)
+            break
+        else: 
+            pass
 
         windowManager.moveWindow()
         #hanlde socket timeout
