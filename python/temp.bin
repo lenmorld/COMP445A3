@@ -1,18 +1,18 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Wed, 23 Nov 2016 01:28:27 GMT
+Date: Fri, 25 Nov 2016 08:56:36 GMT
 Content-Type: application/json
-Content-Length: 302
+Content-Length: 325
 Connection: close
 
 {
-    "data": "Files found\r\nFiles inside directory:\r\n['foo', 'process_http_file.py', 'cat.txt', 'readme2', 'bar']",
+    "data": "Requested file found\r\nContents of foo\r\n['apple\\n', 'android\\n', 'samsung\\n', 'toshiba\\n', 'acer\\n', '\\n', '\\n']",
     "headers": {
         "Accept": "*/*",
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8003",
-    "url": "127.0.0.1:8003/"
+    "origin": "127.0.0.1:8028",
+    "url": "127.0.0.1:8028/foo"
 }

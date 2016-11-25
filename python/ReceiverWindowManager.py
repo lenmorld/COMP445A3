@@ -20,11 +20,11 @@ class ReceiverWindowManager:
         self.windowStart = 0
         self.windowEnd = self.windowSize
 
-        print("CONSTRUCTOR---")
-        print("Sequence size: ", self.sequenceSize)
-        print("Window size: ", self.windowSize)
-        print("Window start: ", self.windowStart)
-        print("Window end: ", self.windowEnd)               
+        # print("CONSTRUCTOR---")
+        # print("Sequence size: ", self.sequenceSize)
+        # print("Window size: ", self.windowSize)
+        # print("Window start: ", self.windowStart)
+        # print("Window end: ", self.windowEnd)               
 
     def receivePacket(self, sequenceNumber,buf):
 
@@ -79,12 +79,12 @@ class ReceiverWindowManager:
         return index
 
     def isValidSequenceNumber(self, sequenceNumber):
-        print("IF VALID SEQNUM")
-        print("Seq num: ", sequenceNumber)
-        print("Sequence size: ", self.sequenceSize)
-        print("Window size: ", self.windowSize)
-        print("Window start: ", self.windowStart)
-        print("Window end: ", self.windowEnd)   
+        # print("IF VALID SEQNUM")
+        # print("Seq num: ", sequenceNumber)
+        # print("Sequence size: ", self.sequenceSize)
+        # print("Window size: ", self.windowSize)
+        # print("Window start: ", self.windowStart)
+        # print("Window end: ", self.windowEnd)   
 
         if(self.windowStart < self.windowEnd):
             if(self.windowStart <= sequenceNumber and sequenceNumber < self.windowEnd):

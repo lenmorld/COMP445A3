@@ -46,43 +46,42 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
     # need to decide on a fixed window size
 
 
-    while True:
+    # while True:
 
+    packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
 
-        packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
+    # pprint.pprint(packets_from_SR)
+    http_request, peer_ip, peer_port = SR_helper.SR_to_appmessage(packets_from_SR)
 
+    # assume at this point we have HTTP request
+    print("===== HTTP request received ======")
+    print(http_request)
 
-        # pprint.pprint(packets_from_SR)
-        http_request, peer_ip, peer_port = SR_helper.SR_to_appmessage(packets_from_SR)
+    #############################################
+    
+    print("-> sending http response")
 
-        # assume at this point we have HTTP request
-        print("===== HTTP request ======")
-        print(http_request)
+    # formulate response by invoking httpfs
+    http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
+    print(http_response)
 
-        #############################################
-        
-        print("sending http response")
+    packets = SR_helper.prepare_SR(peer_ip, peer_port, http_response)
 
-        # formulate response by invoking httpfs
-        http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
-        print(http_response)
+    # TODO transition to a sender and send HTTP response through SR
 
-        packets = SR_helper.prepare_SR(peer_ip, peer_port, http_response)
+    ################### PUT SR_Sender call here #################
+    # SR_Sender(packets)
 
-        # TODO transition to a sender and send HTTP response through SR
+    print("==== SR sending http response ====")
+    SR_helper.SR_Sender(sender[0], sender[1],  conn, packets)
 
-        ################### PUT SR_Sender call here #################
-        # SR_Sender(packets)
+    # p = packets[0]
+    # conn.sendto(p.to_bytes(), sender)
+    # print('Send "{}" to router'.format(p))
+    ###############################################################
 
-        print("SR seding http response")
-        SR_helper.SR_Sender(sender[0], sender[1],  conn, packets)
+    print("========= HTTP Response sent =========")
 
-        # p = packets[0]
-        # conn.sendto(p.to_bytes(), sender)
-        # print('Send "{}" to router'.format(p))
-        ###############################################################
-
-        print("HTTP Response sent")
 
 def run_server(host, port, directory, isVerb):
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -100,28 +99,32 @@ def run_server(host, port, directory, isVerb):
         # print (conn.getsockname())
 
 
-        print('Echo server is listening at', port)
-        # while True:
-        #     data, sender = conn.recvfrom(1024)
-        #     handle_client(conn, data, sender)
+        while True:
+
+            print('Echo server is listening at', port)
+            # while True:
+            #     data, sender = conn.recvfrom(1024)
+            #     handle_client(conn, data, sender)
 
 
-        ### MULTI-THREADING ###
+            ### MULTI-THREADING ###
 
-        # threads = []
-        # while True:
-        #     conn, addr = listener.accept()
-        #     # going to figure out what the threading does exactly
-        #     t1 =threading.Thread(target=handle_client, args=(conn, addr, port, directory,isVerb))
-        #     t1.start()
-        #     threads.append(t1)
-        # for t in threads:
-        #     t.join()
+            # threads = []
+            # while True:
+            #     conn, addr = listener.accept()
+            #     # going to figure out what the threading does exactly
+            #     t1 =threading.Thread(target=handle_client, args=(conn, addr, port, directory,isVerb))
+            #     t1.start()
+            #     threads.append(t1)
+            # for t in threads:
+            #     t.join()
 
-        conn, data, sender, num_packets = three_way_handshake(conn)
-        print("Handshake done")
-        process_http_request(conn, host, port, data, directory, sender, isVerb, num_packets)
 
+            conn, data, sender, num_packets = three_way_handshake(conn)
+
+            print("Handshake done")
+            process_http_request(conn, host, port, data, directory, sender, isVerb, num_packets)
+            print(" HTTP request | response round-trip done")
     finally:
         conn.close()
 
@@ -133,7 +136,13 @@ def three_way_handshake(conn):
     initial_seq_num = 500 
     global three_way_handshake_good
 
+    data = None
+    sender = None
+
     num_packets = None
+
+    timeout = 5
+
 
     while three_way_handshake_good != True:
 
@@ -175,8 +184,7 @@ def three_way_handshake(conn):
 
                 conn.sendto(syn_ack_p.to_bytes(), sender)
 
-                conn.settimeout(5)
-
+                conn.settimeout(timeout)
                 #### wait for final ACK for Handshake from Client
 
             # receives an ACK
@@ -218,6 +226,8 @@ def three_way_handshake(conn):
                     print("Sending NAK: ")
                     conn.sendto(nak_p.to_bytes(), sender)
 
+                    conn.settimeout(timeout)
+
                     # conn.settimeout(5)                        
 
             elif packet_type == DATA:
@@ -242,7 +252,8 @@ def three_way_handshake(conn):
 
 
             # conn.sendto(p.to_bytes(), sender)
-
+        except conn.timeout:
+            print("handshake timeout")
         except Exception as e:
             print("Error: ", e)
 

@@ -56,7 +56,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         # wait for SYN-ACK
 
         # Try to receive a response within timeout
-        conn.settimeout(5)
+        conn.settimeout(15)
 
         print('Sending SYN with SEQ ', initial_seq_num)
         # print('Waiting for a response...')
