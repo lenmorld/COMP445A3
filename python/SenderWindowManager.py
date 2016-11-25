@@ -52,7 +52,8 @@ class SenderWindowManager:
         # maybe add something to parse the pack nicely
         self.sequenceArray[ack] = True
     def isBuffering(self):
-        return len(self.packetArray) != 0
+        return True
+        #return len(self.packetArray) != 0
         
         
         

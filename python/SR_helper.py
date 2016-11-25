@@ -128,7 +128,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
             # get next ACK
             print("wait for next ACK")
 
-            # conn.setblocking(0)
+            #conn.setblocking(0)
             # data, sender = conn.recvfrom(1024)
             try:
                 data, sender = conn.recvfrom(1024)
@@ -181,9 +181,10 @@ def SR_Sender(router_addr, router_port, conn, packets):
         if windowManager.isBuffering():
             pass
         else:
+            print("you killed the loop")
             break
 
-
+    print("left loop")
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(5)
