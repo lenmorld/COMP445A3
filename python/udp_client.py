@@ -18,6 +18,10 @@ SYN = 1
 ACK = 2
 SYN_ACK = 3
 NAK = 5
+FINAL_ACK = 6
+FINAL_ACK_B = 7
+LENGTH = 8
+ACK_LENGTH = 9
 
 
 def run_client(router_addr, router_port, server_addr, server_port, http_request):
@@ -68,18 +72,56 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
     # Try to receive a response within timeout
     # conn.settimeout(timeout)
 
-    # TODO: transition into SR_receiver and
-    # instead of receiving a HTTP request packet directly from conn
-    # receive Packets[] array (already converted or to convert) to an HTTP request)
-    # from SR algorithm
+
+    ############# recieve number of packets in HTTP Response ####
+    # sort of like a handshake just for length #
+    # length will be sent in seq_num
+
+    received_length = False
+    length_http_response = 1
+    timeout = 10
+
+    conn.settimeout(timeout)
+
+    print("### waiting to receive length of HTTP response ####")
+    while True:
+
+        response, sender = conn.recvfrom(1024)
+        l_packet = Packet.from_bytes(response)
+        l_packet_type = l_packet.packet_type
+        
+
+        if l_packet_type == LENGTH:
+            length_http_response = l_packet.seq_num
+            received_length = True
+            break
+            # TODO: do something if this ACK times out
+
+
+    print("#### Length of HTTP Response: ####", length_http_response)
+
+    # send ACK for length
+    msg= ""
+    ack_l = Packet(packet_type=ACK_LENGTH,
+           seq_num=0,
+           peer_ip_addr=peer_ip,
+           peer_port=server_port,
+           payload=msg.encode("utf-8"))
+
+    print("sending length ACK: ")
+
+    conn.sendto(ack_l.to_bytes(), sender)
+    # conn.settimeout(timeout)
+
+    #################################################################
 
 
     ################### PUT SR_Receiver call here #################
-    # packets_from_SR = SR_Receiver()
-
     print("SR receiving response")
 
-    packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
+    # packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
+    packets_from_SR, sender = SR_helper.SR_Receiver(conn, length_http_response)
+
     ###############################################################
 
     # packets_from_SR = []

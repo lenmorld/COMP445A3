@@ -16,7 +16,8 @@ SYN_ACK = 3
 NAK = 5
 FINAL_ACK = 6
 FINAL_ACK_B = 7
-
+LENGTH = 8
+ACK_LENGTH = 9
 
 def prepare_SR(peer_ip, server_port, payload):
 
@@ -203,7 +204,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 10
+    timeout = 15
 
     receiver_ip = None
     receiver_port = None
@@ -244,8 +245,9 @@ def SR_Receiver(conn, num_packets):
     if packet_type == FINAL_ACK:
         print ("--- final ACK received  ---")
 
-    print("here")
+    print(packet_type)
 
+    print("here")
     # if final ACK received dont go here
 
     while packet_type == DATA:
@@ -304,9 +306,9 @@ def SR_Receiver(conn, num_packets):
                 print(">> more packets expected")
                 break
 
-        except conn.timeout:
-            print('No response after {}s'.format(5))
-            return False
+        except:
+            print('No response after {}s'.format(timeout))
+            return
 
         finally:
             pass

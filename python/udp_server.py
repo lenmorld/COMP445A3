@@ -20,6 +20,10 @@ SYN = 1
 ACK = 2
 SYN_ACK = 3
 NAK = 5
+FINAL_ACK = 6
+FINAL_ACK_B = 7
+LENGTH = 8
+ACK_LENGTH = 9
 
 PAYLOAD_MAX_SIZE = 1013      # bytes
 
@@ -71,6 +75,56 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
 
     ################### PUT SR_Sender call here #################
     # SR_Sender(packets)
+
+
+    ############# send client number of packets in HTTP Response ####
+    # sort of like a handshake just for length #
+    # length will be sent in seq_num
+
+    timeout = 10
+    length_sent = False
+
+    conn.settimeout(timeout)
+
+
+
+    # while length_sent == False:
+
+    #     try:
+
+    msg = ""   # no payload in handshake
+    p = Packet(packet_type=LENGTH,
+               seq_num=len(packets),
+               peer_ip_addr=peer_ip,
+               peer_port=peer_port,
+               payload=msg.encode("utf-8"))
+
+    # send SYN packet
+    conn.sendto(p.to_bytes(), sender)
+    print("#### sending Length of HTTP Response ####")
+    
+
+    # wait for ACK_LENGTH
+    print("### waiting to receive ACK_length from receiver ####")
+    response, sender = conn.recvfrom(1024)
+    al_packet = Packet.from_bytes(response)
+    al_packet_type = al_packet.packet_type
+
+
+    if al_packet_type == ACK_LENGTH:
+        length_sent = True
+
+        # except:
+        #     print("ACK_Length wasnt received, resending length")
+
+    print("ACK LENGTH Successfully sent to Client")
+    # input()
+
+    # TODO: what to do if it times out
+
+    #################################################################
+
+    # since response length is communicated to client, start sending packets
 
     print("==== SR sending http response ====")
     SR_helper.SR_Sender(sender[0], sender[1],  conn, packets)

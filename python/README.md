@@ -62,3 +62,17 @@ when delay introduced, handshake is delayed but still worked
 but HTTP didnt
 
 ./router_x64 --drop-rate 0 --max-delay 5s
+
+
+
+BIG FILES
+
+
+GETTING a big file
+
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost get /bigfile -o bigfile_dload.txt --serverport 8001
+
+
+POSTING a big file
+
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost post -f file_10kb.txt /file10kb2.txt --serverport 8001

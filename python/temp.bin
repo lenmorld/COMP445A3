@@ -1,18 +1,19 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Fri, 25 Nov 2016 09:59:21 GMT
+Date: Sat, 26 Nov 2016 12:59:50 GMT
 Content-Type: application/json
-Content-Length: 325
+Content-Length: 314
 Connection: close
 
 {
-    "data": "Requested file found\r\nContents of foo\r\n['apple\\n', 'android\\n', 'samsung\\n', 'toshiba\\n', 'acer\\n', '\\n', '\\n']",
+    "data": "Creating file\r\nFile doesn't exist in server... Creating file\r\n",
     "headers": {
         "Accept": "*/*",
+        "Content-Length": "10028",
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8034",
-    "url": "127.0.0.1:8034/foo"
+    "origin": "127.0.0.1:8056",
+    "url": "127.0.0.1:8056/file10kb2.txt"
 }
