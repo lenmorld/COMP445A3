@@ -20,8 +20,143 @@ SYN_ACK = 3
 NAK = 5
 FINAL_ACK = 6
 FINAL_ACK_B = 7
-LENGTH = 8
-ACK_LENGTH = 9
+SYN_LENGTH = 8
+SYN_ACK_LENGTH = 9
+ACK_LENGTH = 10
+
+
+def length_handshake(conn):
+
+
+    length_handshake_good = False
+    initial_seq_num = 1200
+
+    ############# recieve number of packets in HTTP Response ####
+    # sort of like a handshake just for length #
+    # length will be sent in seq_num
+
+    length_http_response = None
+    timeout = 10
+
+    # print("### waiting to receive length of HTTP response ####")
+
+    while length_handshake_good != True:
+
+        response, sender = conn.recvfrom(1024)
+
+        try:
+            p = Packet.from_bytes(response)
+            packet_type = p.packet_type
+            his_seq_num = p.seq_num
+            peer_ip = p.peer_ip_addr
+            peer_port = p.peer_port 
+            his_payload = p.payload.decode("utf-8")
+            
+
+            if packet_type == SYN_LENGTH:
+                # length_http_response = l_packet.seq_num
+
+                # print("#### Length of HTTP Response: ####", length_http_response)
+                # length_handshake_good = True
+
+                print("received SYN_LENGTH with SEQ: ", his_seq_num)
+
+                # 2nd step of handshake : if SYN, this is step 1 of handshake, add 1 to client's seq_num
+                my_ack = his_seq_num + 1
+
+
+                # HANDSHAKE step 2
+                # create SYN_ACK packet, ack will be in payload since we dont have ACK in the Packet data structure
+                my_dict_payload = {}
+                my_dict_payload['ack'] = my_ack
+                my_dict_payload['msg'] = ""
+                msg = json.dumps(my_dict_payload)
+
+                syn_ack_p = Packet(packet_type=SYN_ACK_LENGTH,
+                       seq_num=initial_seq_num,
+                       peer_ip_addr=peer_ip,
+                       peer_port=peer_port,
+                       payload=msg.encode("utf-8"))
+
+                print("Sending SYN_ACK_LENGTH with SEQ: ", initial_seq_num, " ACK: ", my_ack)
+
+                conn.sendto(syn_ack_p.to_bytes(), sender)
+
+                conn.settimeout(timeout)
+                #### wait for final ACK for Handshake from Client
+
+
+            # receives an ACK
+            elif packet_type == ACK_LENGTH:  
+                # get ack from payload
+                dict_payload = json.loads(his_payload)
+                ack_good = False
+
+                try:
+
+                    his_ack = dict_payload['ack']
+                    length_http_response = dict_payload['num_packets']
+
+                    print("received final length handshake ACK: ", his_ack, " SEQ: ", his_seq_num)
+
+                    # check if ack sent by client is my seq + 1
+                    if his_ack == (initial_seq_num + 1):
+                        length_handshake_good = True
+                        ack_good = True
+                        print("Server side: 3 way handshake completed. Waiting for HTTP request...")
+
+                    else:
+                        print("Wrong ACK_LENGTH number received")
+                        # wrong ACK number recieved, send NAK
+
+                except KeyError:
+                    print("ACK_LENGTH not found in packet")
+
+                
+                # send NAK if ACK not found in payload or not the correct ACK#
+                if ack_good != True:
+                    msg = "ack not receieved correctly. restart handshake"
+                    nak_p = Packet(packet_type=NAK,
+                           seq_num=0,
+                           peer_ip_addr=peer_ip,
+                           peer_port=peer_port,
+                           payload=msg.encode("utf-8"))
+
+                    print("Sending NAK: ")
+                    conn.sendto(nak_p.to_bytes(), sender)
+
+                    conn.settimeout(timeout)
+
+                    # conn.settimeout(5)  
+
+            # packet type is something else
+            else:
+                if length_handshake_good:
+                    break
+                else:
+                    print("3-way handshake not completed yet. Data packet refused")
+                
+
+                # # send ACK for length
+                # msg= ""
+                # ack_l = Packet(packet_type=ACK_LENGTH,
+                #        seq_num=0,
+                #        peer_ip_addr=peer_ip,
+                #        peer_port=server_port,
+                #        payload=msg.encode("utf-8"))
+
+                # print("sending length ACK: ")
+
+                # conn.sendto(ack_l.to_bytes(), sender)
+                # conn.settimeout(timeout)
+
+        except conn.timeout:
+            print("LENGTH handshake timedout")
+        except Exception as e:
+            print("Error: ", e)
+
+    return length_http_response
+    #################################################################
 
 
 def run_client(router_addr, router_port, server_addr, server_port, http_request):
@@ -43,78 +178,17 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
         else:  # loop to do three_way_handshake again
             print("3-way handshake failed")
 
-    # try:     
-        # msg = "Put HTTP request here"
-
-
-    # TODO: break payload_data into Packets[] array and send
-    # using Selective Repeat
-    # instead of sending all at once
-
-
-    ################### PUT SR_Sender call here #################
-    # SR_Sender(packets)
-    
-    # p = packets[0]
-
-    #conn.sendto(p.to_bytes(), (router_addr, router_port))
-    # print('Send "{}" to router'.format(p))
-    
-    ###############################################################
-
-
+    print("=== Client sending HTTP Request ===")
     SR_helper.SR_Sender(router_addr, router_port,  conn, packets)
     
     
     ###### WAIT TO RECEIVE HTTP RESPONSE #####
     print('===== Waiting for HTTP response =====')
 
-    # Try to receive a response within timeout
-    # conn.settimeout(timeout)
-
-
     ############# recieve number of packets in HTTP Response ####
-    # sort of like a handshake just for length #
-    # length will be sent in seq_num
+    length_http_response = length_handshake(conn)
 
-    received_length = False
-    length_http_response = 1
-    timeout = 10
-
-    conn.settimeout(timeout)
-
-    print("### waiting to receive length of HTTP response ####")
-    while True:
-
-        response, sender = conn.recvfrom(1024)
-        l_packet = Packet.from_bytes(response)
-        l_packet_type = l_packet.packet_type
-        
-
-        if l_packet_type == LENGTH:
-            length_http_response = l_packet.seq_num
-            received_length = True
-            break
-            # TODO: do something if this ACK times out
-
-
-    print("#### Length of HTTP Response: ####", length_http_response)
-
-    # send ACK for length
-    msg= ""
-    ack_l = Packet(packet_type=ACK_LENGTH,
-           seq_num=0,
-           peer_ip_addr=peer_ip,
-           peer_port=server_port,
-           payload=msg.encode("utf-8"))
-
-    print("sending length ACK: ")
-
-    conn.sendto(ack_l.to_bytes(), sender)
-    # conn.settimeout(timeout)
-
-    #################################################################
-
+    # length_http_response = length_handshake(conn, peer_ip, server_port)
 
     ################### PUT SR_Receiver call here #################
     print("SR receiving response")

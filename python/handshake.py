@@ -26,6 +26,11 @@ SYN = 1
 ACK = 2
 SYN_ACK = 3
 NAK = 5
+FINAL_ACK = 6
+FINAL_ACK_B = 7
+SYN_LENGTH = 8
+SYN_ACK_LENGTH = 9
+ACK_LENGTH = 10
 
 
 def three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
@@ -46,7 +51,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         # TODO: implement timeout for this
 
         msg = ""   # no payload in handshake
-        p = Packet(packet_type=1,
+        p = Packet(packet_type=SYN,
                    seq_num=initial_seq_num,
                    peer_ip_addr=peer_ip,
                    peer_port=server_port,
