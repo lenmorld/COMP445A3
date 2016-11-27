@@ -6488,3 +6488,5 @@
 11:40:14.757576 [queue=1] packet #0, 127.0.0.1:8001 -> 127.0.0.1:43692, sz=469 is delayed for 3.7s
 11:40:17.369813 [queue=2] packet #0, 127.0.0.1:8001 -> 127.0.0.1:43692, sz=469 is delayed for 2.4s
 11:40:18.458210 [queue=1] packet #0, 127.0.0.1:8001 -> 127.0.0.1:43692, sz=469 is delivered
+11:43:45.602946 config: drop-rate=0.00, max-delay=1s, seed=1480265025602804710
+11:43:45.603271 failed to listen on port listen udp :3000: bind: address already in use

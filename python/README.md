@@ -27,34 +27,37 @@ the handshake must be restarted
 either by letting it timeout, or sending a NAK
 
 
-# testing GET and POST
+TESTING
 
-run Router
-for now without delay or lost
+############# Run Router #################
+# for now without delay or lost
 
 ./router_x64
 
 
+############# Run Server ####################
+# run in data directory
+python udp_server.py --port 8007 -d data            	
 
-run Server to start in data directory, default would also work
+# run in default directory (but with security restrictions as in Assign.2)
+python udp_server.py --port 8007
 
-python udp_server.py --port 8007 -d data
+
+
+############# Run Client #####################
 
 # GET
 
 # display contents of dir
+
 python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get /
 
 # display contents of file
 python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 get /foo
 
-
-
 # POST
 
  python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost --serverport 8007 post -h Content-Type:application/json -f foo /foo
-
-
 
 
 ### NOTES ####
@@ -68,11 +71,14 @@ GET and POST ===============================================
 100kb File
 
 
-GETTING a big file
+## GETTING a big file
 
-python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost get /bigfile -o bigfile_dload.txt --serverport 8001
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost get /upload1.txt --serverport 8001
+
+## **GET and WRITE TO FILE***
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost get /upload1.txt -o download1.txt --serverport 8001
 
 
-POSTING a 100kb file
+## POSTING a 100kb file
 
 python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost post -f file_100kb.txt /upload1.txt --serverport 8001
