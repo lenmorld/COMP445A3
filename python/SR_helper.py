@@ -92,7 +92,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
     num_packets = len(packets)
     print("packet length ", num_packets)
 
-    windowManager =SenderWindowManager.SenderWindowManager(num_packets)
+    windowManager =SenderWindowManager.SenderWindowManager(20)
     indexReceived=0
     indexSent=0;
     index=0
@@ -214,7 +214,7 @@ def SR_Receiver(conn, num_packets):
     # rWindowManager = ReceiverWindowManager.ReceiverWindowManager(33)
 
     # supply num of packets expected from client
-    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(num_packets)
+    rWindowManager = ReceiverWindowManager.ReceiverWindowManager(20)
 
 
     # TODO: instead of receiving a HTTP request packet directly from conn

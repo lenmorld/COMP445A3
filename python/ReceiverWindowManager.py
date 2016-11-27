@@ -30,7 +30,7 @@ class ReceiverWindowManager:
     #checks if the given sequence is valid between  the windowStart and window end
     #if it is then adds the packet only if the packet is not already there
     def receivePacket(self, sequenceNumber,buf):
-
+        sequenceNumber = sequenceNumber%self.sequenceSize
         print("Received packet: ", sequenceNumber)
         print(buf)
         if(self.isValidSequenceNumber(sequenceNumber)):

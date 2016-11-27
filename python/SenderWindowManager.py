@@ -22,6 +22,7 @@ class SenderWindowManager:
         print("last sequence " ,self.lastSequence)
         print("window End ",self.windowEnd)
         return self.lastSequence != self.windowEnd
+    #when we push a packet coming from a loop so it is assumed to be a valid number -no delay problem
     def pushPacket(self, pack):
         self.packetArray.append(pack)
         self.timerArray.append(time.time())
@@ -52,6 +53,7 @@ class SenderWindowManager:
         return packetsResend
     def receiveAck(self, ack):
         # maybe add something to parse the pack nicely
+        ack = ack%self.sequenceSize
         self.sequenceArray[ack] = True
     def isBuffering(self):
         return True
