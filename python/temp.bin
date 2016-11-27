@@ -1,19 +1,19 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Sat, 26 Nov 2016 12:59:50 GMT
+Date: Sun, 27 Nov 2016 04:39:43 GMT
 Content-Type: application/json
-Content-Length: 314
+Content-Length: 312
 Connection: close
 
 {
     "data": "Creating file\r\nFile doesn't exist in server... Creating file\r\n",
     "headers": {
         "Accept": "*/*",
-        "Content-Length": "10028",
+        "Content-Length": "99843",
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8056",
-    "url": "127.0.0.1:8056/file10kb2.txt"
+    "origin": "127.0.0.1:8001",
+    "url": "127.0.0.1:8001/upload2.txt"
 }

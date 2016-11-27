@@ -64,8 +64,8 @@ but HTTP didnt
 ./router_x64 --drop-rate 0 --max-delay 5s
 
 
-
-BIG FILES
+GET and POST ===============================================
+100kb File
 
 
 GETTING a big file
@@ -73,6 +73,6 @@ GETTING a big file
 python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost get /bigfile -o bigfile_dload.txt --serverport 8001
 
 
-POSTING a big file
+POSTING a 100kb file
 
-python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost post -f file_10kb.txt /file10kb2.txt --serverport 8001
+python udp_client.py --routerhost localhost --routerport 3000 --serverhost localhost post -f file_100kb.txt /upload1.txt --serverport 8001
