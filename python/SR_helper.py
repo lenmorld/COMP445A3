@@ -204,7 +204,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 15
+    timeout = 50
 
     receiver_ip = None
     receiver_port = None
@@ -259,7 +259,7 @@ def SR_Receiver(conn, num_packets):
             rWindowManager.receivePacket(seq_num, p)
 
             # packets_from_SR.append(p)
-
+                      
             packet_from_SR = rWindowManager.moveWindow()
 
             # for each packet received, send ACK
@@ -284,7 +284,28 @@ def SR_Receiver(conn, num_packets):
 
             # packets_from_SR.append(packet_from_SR)
             packets_from_SR += packet_from_SR
-            
+            # only needed if whole buffer is not cleared
+            packets_out = rWindowManager.packetsOutOfOrder()
+            print(packets_out)
+            """
+            for p_s in packets_out:
+                print("Packet to be ACKed: ", p_s.seq_num)
+                msg = ""
+                # create ACK packet with ACK# in seq_num
+                ack_p = Packet(packet_type=ACK,
+                       seq_num=p_s.seq_num,
+                       peer_ip_addr=p_s.peer_ip_addr,
+                       peer_port=p_s.peer_port,
+                       payload=msg.encode("utf-8"))
+
+                receiver_ip = p_s.peer_ip_addr
+                receiver_port = p_s.peer_port
+
+                print("sending ACK: ", p_s.seq_num)
+                conn.sendto(ack_p.to_bytes(), sender)
+                #done count received only count when we clear the buffer
+                #received_packets += 1
+            """
 
             # Try to receive ACKs within timeout
             conn.settimeout(timeout)

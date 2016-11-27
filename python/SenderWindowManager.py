@@ -4,6 +4,7 @@ Created on Nov 19, 2016
 @author: Elliot
 '''
 import time
+import pprint
 class SenderWindowManager:
     def __init__(self, sequenceSize):
         self.sequenceSize = sequenceSize
@@ -44,11 +45,16 @@ class SenderWindowManager:
         currentTime = time.time()
         index = 0
         packetsResend = []
+        print("resending packets")
+        pprint.pprint(self.packetArray)
         while (index < len(self.timerArray)):
             if(self.timeout < (currentTime - self.timerArray[index])):
-                print("WindowNumber ", index, " Was resent")
-                packetsResend.append(self.packetArray[index])
-                self.timerArray[index] = currentTime
+                
+                seqIndex =  (index+self.windowStart)%self.sequenceSize
+                if(not self.sequenceArray[seqIndex]):
+                    print("WindowNumber ", (self.windowStart+index), " Was resent")
+                    packetsResend.append(self.packetArray[index])
+                    self.timerArray[index] = currentTime
             index = index + 1
         return packetsResend
     def receiveAck(self, ack):

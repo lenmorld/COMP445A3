@@ -45,7 +45,16 @@ class ReceiverWindowManager:
                 print("")
             else:
                 print("need to resend ACK")
-
+    def packetsOutOfOrder(self):
+        index = self.windowStart
+        results =[]
+        while(index<self.windowSize):
+            if(self.sequenceArray[index]):
+                results.append(self.bufferArray[index])
+            index = (index+1)%self.sequenceSize
+        return results
+            
+        
     #moves the window if the first packet expected the windowStart has been received and then increments in order from there
     # it increments by the size of the sequence so as to have correct modularity
     #increments both the windowStart and windowend
