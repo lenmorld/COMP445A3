@@ -26,6 +26,9 @@ class ReceiverWindowManager:
         # print("Window start: ", self.windowStart)
         # print("Window end: ", self.windowEnd)               
 
+    #receives a packet number and the buf the actual packet
+    #checks if the given sequence is valid between  the windowStart and window end
+    #if it is then adds the packet only if the packet is not already there
     def receivePacket(self, sequenceNumber,buf):
 
         print("Received packet: ", sequenceNumber)
@@ -43,6 +46,10 @@ class ReceiverWindowManager:
             else:
                 print("need to resend ACK")
 
+    #moves the window if the first packet expected the windowStart has been received and then increments in order from there
+    # it increments by the size of the sequence so as to have correct modularity
+    #increments both the windowStart and windowend
+    #
     def moveWindow(self):
         print("in move window")
         pprint.pprint(self.bufferArray)
@@ -69,7 +76,8 @@ class ReceiverWindowManager:
     
         # print(result)
         return result
-               
+     #converts the sequence number to the element in the window
+     #between windowstart and windowend          
     def sequenceToWindowIndex(self, sequenceNumber):
         ptr = self.windowStart
         index = 0
@@ -77,7 +85,8 @@ class ReceiverWindowManager:
             ptr = (ptr + 1) % self.sequenceSize
             index = index + 1
         return index
-
+    #checks if the sequence number is valid will if windowend> windowstart does the standard comparision
+    #otherwise will compare in the opposite way
     def isValidSequenceNumber(self, sequenceNumber):
         # print("IF VALID SEQNUM")
         # print("Seq num: ", sequenceNumber)

@@ -36,7 +36,9 @@ class SenderWindowManager:
             self.sequenceArray[self.windowEnd] = False
             self.packetArray.pop(0)
             self.timerArray.pop(0)
-        
+     #resends a packet if the time since the packet was last sent is great then self.timeout
+     #will only increment on the actual number of elements in the timerArray as not every packet may 
+     #actually need to be resent   
     def resendPacket(self):
         currentTime = time.time()
         index = 0
