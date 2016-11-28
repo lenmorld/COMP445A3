@@ -19,6 +19,8 @@ FINAL_ACK_B = 7
 LENGTH = 8
 ACK_LENGTH = 9
 
+
+
 def prepare_SR(peer_ip, server_port, payload):
 
     # encode before | after we split
@@ -53,6 +55,8 @@ def prepare_SR(peer_ip, server_port, payload):
     return packets
 
 
+
+
 def SR_to_appmessage(packets):
 
     # get Packet[] array from SR then package together into original form
@@ -80,6 +84,8 @@ def SR_to_appmessage(packets):
 
 
     return http_message, peer_ip, server_port
+
+
 
 
 def SR_Sender(router_addr, router_port, conn, packets):
@@ -133,7 +139,6 @@ def SR_Sender(router_addr, router_port, conn, packets):
             print("No ACK yet")
             packet_type = None
 
-
         ####################################################################
         if packet_type == FINAL_ACK_B:
             print("Receiver received everything. HTTP transaction complete")
@@ -184,11 +189,13 @@ def SR_Sender(router_addr, router_port, conn, packets):
             print("you killed the loop")
             break
 
+
+
     # final ack if all ACKs are received
 
     msg = ""   # no payload in handshake
-    p = Packet(packet_type=6,
-               seq_num=1,
+    p = Packet(packet_type=FINAL_ACK,
+               seq_num=678,
                peer_ip_addr=receiver_ip,
                peer_port=receiver_port,
                payload=msg.encode("utf-8"))
@@ -199,6 +206,9 @@ def SR_Sender(router_addr, router_port, conn, packets):
 
     print("sending final ACK")
     print("left loop")
+
+    return True
+
 
 
 def SR_Receiver(conn, num_packets):
@@ -245,12 +255,17 @@ def SR_Receiver(conn, num_packets):
     if packet_type == FINAL_ACK:
         print ("--- final ACK received  ---")
 
+
+
     print(packet_type)
 
     print("here")
     # if final ACK received dont go here
 
-    while packet_type == DATA:
+    while packet_type == DATA or packet_type == ACK:
+
+        if packet_type == ACK:
+            continue
 
         try:
 
@@ -341,8 +356,8 @@ def SR_Receiver(conn, num_packets):
     # final ack if all ACKs are received
 
     msg = ""   # no payload in handshake
-    p = Packet(packet_type=7,
-               seq_num=1,
+    p = Packet(packet_type=FINAL_ACK_B,
+               seq_num=789,
                peer_ip_addr=receiver_ip,
                peer_port=receiver_port,
                payload=msg.encode("utf-8"))
@@ -363,9 +378,9 @@ def SR_Receiver(conn, num_packets):
         print(p.seq_num)
         print(p.peer_ip_addr)
 
+
+
     return packets_from_SR, sender
 
 
     # alert Sender that everything received
-
-

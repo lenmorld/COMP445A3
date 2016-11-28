@@ -46,7 +46,6 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
     initial_seq_num = 100
 
     try:
-
         # HANDSHAKE step 1: create SYN packet
         # TODO: implement timeout for this
 
@@ -60,9 +59,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         # send SYN packet
         conn.sendto(p.to_bytes(), (router_addr, router_port))
         # print('Send "{}" to router'.format(msg))
-
         # wait for SYN-ACK
-
         # Try to receive a response within timeout
         conn.settimeout(timeout)
 
@@ -72,7 +69,6 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
         response, sender = conn.recvfrom(1024)
         handshake_packet = Packet.from_bytes(response)
         hs_payload = handshake_packet.payload.decode("utf-8")
-
         packet_type = handshake_packet.packet_type
         his_seq_num = handshake_packet.seq_num
         # get ack from payload
@@ -128,10 +124,11 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
 
         elif packet_type == NAK:
             print("NAK sent by server.Redo handshake")
+            input("RESTARTING HANDSHAKE")
             return False
 
     except socket.timeout:
-        print('No response after {}s'.format(5))
+        print('No response after {}s'.format(timeout))
         print('Repeat handshake')
         return False
     # finally:

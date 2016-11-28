@@ -36,7 +36,7 @@ def length_handshake(conn):
     # length will be sent in seq_num
 
     length_http_response = None
-    timeout = 10
+    timeout = 15
 
     # print("### waiting to receive length of HTTP response ####")
 
@@ -124,18 +124,34 @@ def length_handshake(conn):
 
                     print("Sending NAK: ")
                     conn.sendto(nak_p.to_bytes(), sender)
-
                     conn.settimeout(timeout)
 
                     # conn.settimeout(5)  
 
+            # if data received and we have length of http_response, its ok to not get the ACK_LENGTH
+            elif packet_type == DATA and length_http_response != None:
+                if his_seq_num == 0:    
+                    break
+            
             # packet type is something else
             else:
                 if length_handshake_good:
                     break
+
                 else:
-                    print("3-way handshake not completed yet. Data packet refused")
-                
+                    print("3-way LENGTH handshake not completed yet. Data packet refused")
+
+
+                    msg = "LENGTH ack not receieved correctly. restart handshake"
+                    nak_p = Packet(packet_type=NAK,
+                           seq_num=DATA,
+                           peer_ip_addr=peer_ip,
+                           peer_port=peer_port,
+                           payload=msg.encode("utf-8"))
+
+                    print("Sending NAK: ")
+                    conn.sendto(nak_p.to_bytes(), sender)
+                    conn.settimeout(timeout)                
 
                 # # send ACK for length
                 # msg= ""
@@ -151,8 +167,10 @@ def length_handshake(conn):
                 # conn.settimeout(timeout)
 
         except conn.timeout:
+            print("FUCK1")
             print("LENGTH handshake timedout")
         except Exception as e:
+            print("FUCK")
             print("Error: ", e)
 
     return length_http_response

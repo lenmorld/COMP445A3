@@ -79,7 +79,6 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
         # Try to receive a response within timeout
         conn.settimeout(timeout)
 
-
         print('Sending SYN_LENGTH with SEQ ', initial_seq_num)
 
         response, sender = conn.recvfrom(1024)
@@ -154,7 +153,9 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
 
         elif packet_type == NAK:
             print("NAK sent by server.Redo handshake")
-            return False
+            # return False
+
+            # DO SOMETHING WITH NAK
 
     except:  # conn.timeout
 
@@ -266,7 +267,7 @@ def three_way_handshake(conn):
 
     num_packets = None
 
-    timeout = 15
+    timeout = 30
 
 
     while three_way_handshake_good != True:
@@ -343,14 +344,13 @@ def three_way_handshake(conn):
                 if ack_good != True:
                     msg = "ack not receieved correctly. restart handshake"
                     nak_p = Packet(packet_type=NAK,
-                           seq_num=0,
+                           seq_num=DATA,
                            peer_ip_addr=peer_ip,
                            peer_port=peer_port,
                            payload=msg.encode("utf-8"))
 
                     print("Sending NAK: ")
                     conn.sendto(nak_p.to_bytes(), sender)
-
                     conn.settimeout(timeout)
 
                     # conn.settimeout(5)                        
@@ -358,8 +358,23 @@ def three_way_handshake(conn):
             elif packet_type == DATA:
                 if three_way_handshake_good:
                     break
+
+                elif his_seq_num == 0:          # this means SYN_ACK is successfully sent and first packet is received
+                    break
                 else:
                     print("3-way handshake not completed yet. Data packet refused")
+                    # send NAK, to restart handshake
+
+                    msg = "ack not receieved correctly. restart handshake"
+                    nak_p = Packet(packet_type=NAK,
+                           seq_num=DATA,
+                           peer_ip_addr=peer_ip,
+                           peer_port=peer_port,
+                           payload=msg.encode("utf-8"))
+
+                    print("Sending NAK: ")
+                    conn.sendto(nak_p.to_bytes(), sender)
+                    conn.settimeout(timeout)
                     
 
             # if three_way_handshake_good:
@@ -379,8 +394,10 @@ def three_way_handshake(conn):
             # conn.sendto(p.to_bytes(), sender)
         # conn.timeout
         except Exception as e:
+            print("this 1")
             print("Error: ", e)
         except:
+            print("this 2")
             print("handshake timeout")
 
     return conn, data, sender, num_packets
