@@ -29,6 +29,13 @@ class SenderWindowManager:
         self.timerArray.append(time.time())
         self.lastSequence = (self.lastSequence + 1) % self.sequenceSize
         # need to add more
+    def setWindowTrue(self,nackP):
+        if nackP != (self.windowEnd)%self.sequenceSize:
+            return
+        index=0
+        while(index<self.windowSize):
+            self.sequenceArray[(self.windowStart+index)%self.sequenceSize] =True
+            index = index+1
     def moveWindow(self):
         # to do while loop
         print("moving window")

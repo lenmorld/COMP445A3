@@ -19,6 +19,7 @@ class ReceiverWindowManager:
         self.sizeArray = [0] * self.windowSize
         self.windowStart = 0
         self.windowEnd = self.windowSize
+        self.outOfOrder=False
 
         # print("CONSTRUCTOR---")
         # print("Sequence size: ", self.sequenceSize)
@@ -45,6 +46,9 @@ class ReceiverWindowManager:
                 print("")
             else:
                 print("need to resend ACK")
+                self.outOfOrder =True
+        else:
+            self.outOfOrder =True
     def packetsOutOfOrder(self):
         index = self.windowStart
         results =[]

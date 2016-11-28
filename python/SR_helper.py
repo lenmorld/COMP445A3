@@ -140,17 +140,21 @@ def SR_Sender(router_addr, router_port, conn, packets):
             break
         ####################################################################
         
-        while packet_type == ACK:
-            ack_num = p.seq_num
-            windowManager.receiveAck(ack_num)
-            indexReceived = indexReceived+1
-            print("ACK#  received", ack_num)
-
-            # get next ACK
-            print("wait for next ACK")
-
-            #conn.setblocking(0)
-            # data, sender = conn.recvfrom(1024)
+        while packet_type == ACK or packet_type==NAK:
+            if packet_type==NAK:
+                nack_num= p.seq_num
+                windowManager.setWindowTrue(nack_num)
+            else:
+                ack_num = p.seq_num
+                windowManager.receiveAck(ack_num)
+                indexReceived = indexReceived+1
+                print("ACK#  received", ack_num)
+    
+                # get next ACK
+                print("wait for next ACK")
+    
+                #conn.setblocking(0)
+                # data, sender = conn.recvfrom(1024)
             try:
                 data, sender = conn.recvfrom(1024)
                 p = Packet.from_bytes(data)
@@ -287,6 +291,19 @@ def SR_Receiver(conn, num_packets):
             # only needed if whole buffer is not cleared
             packets_out = rWindowManager.packetsOutOfOrder()
             print(packets_out)
+            #maybe we will send twice cause really important
+            if rWindowManager.outOfOrder:
+                print("packet out of order")
+                print("sending a nack for ",rWindowManager.windowStart)
+                errorMsg="out of order"
+                nck_p = Packet(packet_type=NAK,
+                       seq_num=rWindowManager.windowStart,
+                       peer_ip_addr=p_s.peer_ip_addr,
+                       peer_port=p_s.peer_port,
+                       payload=errorMsg.encode("utf-8"))
+                rWindowManager.outOfOrder =False
+                conn.sendto(nck_p.to_bytes(), sender)
+                
             """
             for p_s in packets_out:
                 print("Packet to be ACKed: ", p_s.seq_num)
