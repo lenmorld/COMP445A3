@@ -141,7 +141,7 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
             return False
 
     except socket.timeout:
-        print('No response after {}s'.format(5))
+        print('No response after {}s'.format(timeout))
         print('Repeat handshake')
         return False
     # finally:

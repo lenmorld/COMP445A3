@@ -36,7 +36,7 @@ def length_handshake(conn):
     # length will be sent in seq_num
 
     length_http_response = None
-    timeout = 10
+    timeout = 30
 
     # print("### waiting to receive length of HTTP response ####")
 

@@ -70,6 +70,7 @@ def SR_to_appmessage(packets):
     # print(type(packets))
     # print(type(packets[0]))
     # print(packets[0].payload.decode("utf-8"))
+
     peer_ip = packets[0].peer_ip_addr
     server_port = packets[0].peer_port
 
@@ -87,10 +88,12 @@ def SR_to_appmessage(packets):
 
 def SR_Sender(router_addr, router_port, conn, packets):
 
-    timeout = 30
+    timeout = 1
 
     receiver_ip = None
     receiver_port = None
+
+    conn.settimeout(timeout)
 
     num_packets = len(packets)
     print("packet length ", num_packets)
@@ -191,30 +194,45 @@ def SR_Sender(router_addr, router_port, conn, packets):
             print("you killed the loop")
             break
 
+
+
+
     # final ack if all ACKs are received
 
     msg = ""   # no payload in handshake
-    p = Packet(packet_type=6,
-               seq_num=1,
+    p = Packet(packet_type=FINAL_ACK,
+               seq_num=678678,
                peer_ip_addr=receiver_ip,
                peer_port=receiver_port,
                payload=msg.encode("utf-8"))
 
-    # send SYN packet
-    conn.sendto(p.to_bytes(), (router_addr, router_port))
+    # conn.sendto(p.to_bytes(), (router_addr, router_port))
     conn.settimeout(timeout)
 
-    print("sending final ACK")
+    # send FINAL_ACK 5 times
+
+    send_ctr_2 = 0
+
+    while (send_ctr_2 < 5):
+
+        print("->sending FINAL_ACK: ", p)
+        conn.sendto(p.to_bytes(), (router_addr, router_port))
+        print("FINAL_ACK sent... ")
+        
+        send_ctr_2 += 1
+
+
+    # print("sending final ACK")
     print("left loop")
 
 
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 30
+    timeout = 10
 
-    receiver_ip = None
-    receiver_port = None
+    # receiver_ip = None
+    # receiver_port = None
 
     print("Expected num of packets: ", num_packets)
 
@@ -248,6 +266,9 @@ def SR_Receiver(conn, num_packets):
     packet_type = p.packet_type
     seq_num = p.seq_num
 
+    receiver_ip = p.peer_ip_addr
+    receiver_port = p.peer_port
+
 
     if packet_type == FINAL_ACK:
         print ("--- final ACK received  ---")
@@ -258,15 +279,25 @@ def SR_Receiver(conn, num_packets):
     # if final ACK received dont go here
 
 
+    # while packet_type == DATA or packet_type == ACK_HANDSHAKE \
+    #     or packet_type == ACK_LENGTH or packet_type == FINAL_ACK or packet_type == FINAL_ACK_B:
 
-
-    while packet_type == DATA or packet_type == ACK_HANDSHAKE:
-
+    while packet_type in [DATA, SYN, ACK, SYN_ACK, ACK_HANDSHAKE, NAK, FINAL_ACK, FINAL_ACK_B, SYN_LENGTH, SYN_ACK_LENGTH, ACK_LENGTH]:
         try:
 
-            if packet_type == ACK_HANDSHAKE:
-                print("---- extra HANDSHAKE ACKs received, ignore ----")
-                # continue
+            # if packet_type == ACK_HANDSHAKE:
+            #     print("---- extra ACK_HANDSHAKE received, ignore ----")
+            #     # continue
+            # elif packet_type == ACK_LENGTH:
+            #     print("---- extra ACK_LENGTH_HANDSHAKE received, ignore ----")
+            # elif packet_type == FINAL_ACK:
+            #     print("---- extra FINAL_ACK received, ignore ---")
+            # elif packet_type == FINAL_ACK_B:
+            #     print("---- extra FINAL_ACK_B received, ignore ---")
+
+            if packet_type in [SYN,ACK, SYN_ACK, ACK_HANDSHAKE, NAK, FINAL_ACK, FINAL_ACK_B, SYN_LENGTH, SYN_ACK_LENGTH, ACK_LENGTH]:
+                print("Packet type invalid", packet_type)
+
             else:
 
                 print("receive packet# ", seq_num)
@@ -289,8 +320,8 @@ def SR_Receiver(conn, num_packets):
                            peer_port=p_s.peer_port,
                            payload=msg.encode("utf-8"))
 
-                    receiver_ip = p_s.peer_ip_addr
-                    receiver_port = p_s.peer_port
+                    # receiver_ip = p_s.peer_ip_addr
+                    # receiver_port = p_s.peer_port
 
                     print("sending ACK: ", p_s.seq_num)
                     conn.sendto(ack_p.to_bytes(), sender)
@@ -373,24 +404,34 @@ def SR_Receiver(conn, num_packets):
 
     msg = ""   # no payload in handshake
     p = Packet(packet_type=FINAL_ACK_B,
-               seq_num=1,
+               seq_num=789789,
                peer_ip_addr=receiver_ip,
                peer_port=receiver_port,
                payload=msg.encode("utf-8"))
 
     # send SYN packet
-    conn.sendto(p.to_bytes(), sender)
+    # conn.sendto(p.to_bytes(), sender)
     conn.settimeout(timeout)
 
     print("sending final ACK to finalize HTTP transaction")
+
+    # send FINAL_ACK_B 5 times to make sure
+
+    send_ctr_2 = 0
+
+    while (send_ctr_2 < 5):
+
+        print("->sending FINAL_ACK_B: ", p)
+        conn.sendto(p.to_bytes(), sender)
+        print("FINAL_ACK_B sent... ")
+        
+        send_ctr_2 += 1
+
     ###############################################################
-
-
-
-
 
     ###### APP LAYER ##########
     print("SR result Packet[]")
+    print("len packets: ", len(packets_from_SR))
     print("after SR")
     for pp in packets_from_SR:
         print(type(p))

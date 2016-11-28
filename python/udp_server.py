@@ -56,7 +56,7 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
     # sort of like a handshake just for length #
     # length will be sent in seq_num
 
-    timeout = 15
+    timeout = 2
     length_sent = False
 
     initial_seq_num = 200
@@ -140,7 +140,18 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
 
                 conn.sendto(ack_p.to_bytes(), sender)
                 print("ACK_LENGTH sent")
+
+                send_ctr = 0
                 conn.settimeout(timeout)
+
+                while (send_ctr < 5):
+
+                    print("->sending ACK_LENGTH: ", ack_p, " SEQ:", my_seq_num)
+
+                    conn.sendto(ack_p.to_bytes(), sender)
+                    print("ACK_LENGTH sent... ")
+                    
+                    send_ctr += 1
 
                 ####### 3-way handshake good #########
 
@@ -270,7 +281,7 @@ def three_way_handshake(conn):
 
     num_packets = None
 
-    timeout = 30
+    timeout = 10
 
     syn_sent_time = 0
     syn_received = 0
@@ -297,7 +308,7 @@ def three_way_handshake(conn):
             # check packet type
             if packet_type == SYN:
 
-                
+
 
                 syn_received += 1
 
