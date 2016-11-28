@@ -5,6 +5,7 @@ import pprint
 import sys
 
 import os
+import time
 
 
 
@@ -19,6 +20,7 @@ DATA = 0
 SYN = 1
 ACK = 2
 SYN_ACK = 3
+ACK_HANDSHAKE = 4
 NAK = 5
 FINAL_ACK = 6
 FINAL_ACK_B = 7
@@ -172,6 +174,8 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
 
     # while True:
 
+    print("numpackets:", num_packets)
+
     packets_from_SR, sender = SR_helper.SR_Receiver(conn, num_packets)
 
     # pprint.pprint(packets_from_SR)
@@ -266,8 +270,10 @@ def three_way_handshake(conn):
 
     num_packets = None
 
-    timeout = 15
+    timeout = 30
 
+    syn_sent_time = 0
+    syn_received = 0
 
     while three_way_handshake_good != True:
 
@@ -284,8 +290,16 @@ def three_way_handshake(conn):
             peer_port = p.peer_port 
             his_payload = p.payload.decode("utf-8")
 
+
+            syn_elapsed_time = time.time() - syn_sent_time
+
+
             # check packet type
             if packet_type == SYN:
+
+                
+
+                syn_received += 1
 
                 print("received SYN with SEQ: ", his_seq_num)
 
@@ -309,11 +323,14 @@ def three_way_handshake(conn):
 
                 conn.sendto(syn_ack_p.to_bytes(), sender)
 
+                syn_sent_time = time.time()
+
                 conn.settimeout(timeout)
                 #### wait for final ACK for Handshake from Client
 
             # receives an ACK
-            elif packet_type == ACK:  
+            elif packet_type == ACK_HANDSHAKE:  
+
                 # get ack from payload
                 dict_payload = json.loads(his_payload)
                 ack_good = False

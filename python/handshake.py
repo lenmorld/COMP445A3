@@ -25,6 +25,7 @@ DATA = 0
 SYN = 1
 ACK = 2
 SYN_ACK = 3
+ACK_HANDSHAKE = 4
 NAK = 5
 FINAL_ACK = 6
 FINAL_ACK_B = 7
@@ -35,7 +36,7 @@ ACK_LENGTH = 10
 
 def three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
 
-    timeout = 10
+    timeout = 2
 
     peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
 
@@ -102,17 +103,26 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
                 msg = json.dumps(my_dict_payload)
 
                 # create final ACK packet
-                ack_p = Packet(packet_type=ACK,
+                ack_p = Packet(packet_type=ACK_HANDSHAKE,
                        seq_num=my_seq_num,
                        peer_ip_addr=peer_ip,
                        peer_port=server_port,
                        payload=msg.encode("utf-8"))
 
-                print("sending ACK: ", my_ack, " SEQ:", my_seq_num)
 
-                conn.sendto(ack_p.to_bytes(), sender)
-                print("ACK sent... We could also piggyback data here")
+                send_ctr = 0
+
                 conn.settimeout(timeout)
+
+                while (send_ctr < 5):
+
+                    print("->sending ACK: ", my_ack, " SEQ:", my_seq_num)
+
+                    conn.sendto(ack_p.to_bytes(), sender)
+                    print("ACK sent... We could also piggyback data here")
+                    
+                    send_ctr += 1
+
 
                 ####### 3-way handshake good #########
 

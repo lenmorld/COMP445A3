@@ -1,6 +1,7 @@
 import sys
 import pprint
 from packet import Packet
+import time
 
 import SenderWindowManager
 import ReceiverWindowManager
@@ -13,11 +14,13 @@ DATA = 0
 SYN = 1
 ACK = 2
 SYN_ACK = 3
+ACK_HANDSHAKE = 4
 NAK = 5
 FINAL_ACK = 6
 FINAL_ACK_B = 7
-LENGTH = 8
-ACK_LENGTH = 9
+SYN_LENGTH = 8
+SYN_ACK_LENGTH = 9
+ACK_LENGTH = 10
 
 def prepare_SR(peer_ip, server_port, payload):
 
@@ -84,7 +87,7 @@ def SR_to_appmessage(packets):
 
 def SR_Sender(router_addr, router_port, conn, packets):
 
-    timeout = 10
+    timeout = 30
 
     receiver_ip = None
     receiver_port = None
@@ -208,7 +211,7 @@ def SR_Sender(router_addr, router_port, conn, packets):
 def SR_Receiver(conn, num_packets):
 
     # conn.settimeout(50)
-    timeout = 50
+    timeout = 30
 
     receiver_ip = None
     receiver_port = None
@@ -254,78 +257,86 @@ def SR_Receiver(conn, num_packets):
     print("here")
     # if final ACK received dont go here
 
-    while packet_type == DATA:
+
+
+
+    while packet_type == DATA or packet_type == ACK_HANDSHAKE:
 
         try:
 
-            print("receive packet# ", seq_num)
+            if packet_type == ACK_HANDSHAKE:
+                print("---- extra HANDSHAKE ACKs received, ignore ----")
+                # continue
+            else:
 
-            rWindowManager.receivePacket(seq_num, p)
+                print("receive packet# ", seq_num)
 
-            # packets_from_SR.append(p)
-                      
-            packet_from_SR = rWindowManager.moveWindow()
+                rWindowManager.receivePacket(seq_num, p)
 
-            # for each packet received, send ACK
-            for p_s in packet_from_SR:
+                # packets_from_SR.append(p)
+                          
+                packet_from_SR = rWindowManager.moveWindow()
 
-                print("Packet to be ACKed: ", p_s.seq_num)
-                msg = ""
-                # create ACK packet with ACK# in seq_num
-                ack_p = Packet(packet_type=ACK,
-                       seq_num=p_s.seq_num,
-                       peer_ip_addr=p_s.peer_ip_addr,
-                       peer_port=p_s.peer_port,
-                       payload=msg.encode("utf-8"))
+                # for each packet received, send ACK
+                for p_s in packet_from_SR:
 
-                receiver_ip = p_s.peer_ip_addr
-                receiver_port = p_s.peer_port
+                    print("Packet to be ACKed: ", p_s.seq_num)
+                    msg = ""
+                    # create ACK packet with ACK# in seq_num
+                    ack_p = Packet(packet_type=ACK,
+                           seq_num=p_s.seq_num,
+                           peer_ip_addr=p_s.peer_ip_addr,
+                           peer_port=p_s.peer_port,
+                           payload=msg.encode("utf-8"))
 
-                print("sending ACK: ", p_s.seq_num)
-                conn.sendto(ack_p.to_bytes(), sender)
+                    receiver_ip = p_s.peer_ip_addr
+                    receiver_port = p_s.peer_port
 
-                received_packets += 1
+                    print("sending ACK: ", p_s.seq_num)
+                    conn.sendto(ack_p.to_bytes(), sender)
 
-            # packets_from_SR.append(packet_from_SR)
-            packets_from_SR += packet_from_SR
-            # only needed if whole buffer is not cleared
-            packets_out = rWindowManager.packetsOutOfOrder()
-            print(packets_out)
-            #maybe we will send twice cause really important
-            if rWindowManager.outOfOrder:
-                print("packet out of order")
-                print("sending a nack for ",rWindowManager.windowStart)
-                errorMsg="out of order"
-                nck_p = Packet(packet_type=NAK,
-                       seq_num=rWindowManager.windowStart,
-                       peer_ip_addr=p_s.peer_ip_addr,
-                       peer_port=p_s.peer_port,
-                       payload=errorMsg.encode("utf-8"))
-                rWindowManager.outOfOrder =False
-                conn.sendto(nck_p.to_bytes(), sender)
-                
-            """
-            for p_s in packets_out:
-                print("Packet to be ACKed: ", p_s.seq_num)
-                msg = ""
-                # create ACK packet with ACK# in seq_num
-                ack_p = Packet(packet_type=ACK,
-                       seq_num=p_s.seq_num,
-                       peer_ip_addr=p_s.peer_ip_addr,
-                       peer_port=p_s.peer_port,
-                       payload=msg.encode("utf-8"))
+                    received_packets += 1
 
-                receiver_ip = p_s.peer_ip_addr
-                receiver_port = p_s.peer_port
+                # packets_from_SR.append(packet_from_SR)
+                packets_from_SR += packet_from_SR
+                # only needed if whole buffer is not cleared
+                packets_out = rWindowManager.packetsOutOfOrder()
+                print(packets_out)
+                #maybe we will send twice cause really important
+                if rWindowManager.outOfOrder:
+                    print("packet out of order")
+                    print("sending a nack for ",rWindowManager.windowStart)
+                    errorMsg="out of order"
+                    nck_p = Packet(packet_type=NAK,
+                           seq_num=rWindowManager.windowStart,
+                           peer_ip_addr=p_s.peer_ip_addr,
+                           peer_port=p_s.peer_port,
+                           payload=errorMsg.encode("utf-8"))
+                    rWindowManager.outOfOrder =False
+                    conn.sendto(nck_p.to_bytes(), sender)
+                    
+                """
+                for p_s in packets_out:
+                    print("Packet to be ACKed: ", p_s.seq_num)
+                    msg = ""
+                    # create ACK packet with ACK# in seq_num
+                    ack_p = Packet(packet_type=ACK,
+                           seq_num=p_s.seq_num,
+                           peer_ip_addr=p_s.peer_ip_addr,
+                           peer_port=p_s.peer_port,
+                           payload=msg.encode("utf-8"))
 
-                print("sending ACK: ", p_s.seq_num)
-                conn.sendto(ack_p.to_bytes(), sender)
-                #done count received only count when we clear the buffer
-                #received_packets += 1
-            """
+                    receiver_ip = p_s.peer_ip_addr
+                    receiver_port = p_s.peer_port
 
-            # Try to receive ACKs within timeout
-            conn.settimeout(timeout)
+                    print("sending ACK: ", p_s.seq_num)
+                    conn.sendto(ack_p.to_bytes(), sender)
+                    #done count received only count when we clear the buffer
+                    #received_packets += 1
+                """
+
+                # Try to receive ACKs within timeout
+                conn.settimeout(timeout)
 
             # next packet
             if received_packets < expected_packet_num:
@@ -354,11 +365,14 @@ def SR_Receiver(conn, num_packets):
 
     print("either finish or final ACK received")
 
+
+    # TODO: what if this final ACK is lost
+
     ###########################################################
     # final ack if all ACKs are received
 
     msg = ""   # no payload in handshake
-    p = Packet(packet_type=7,
+    p = Packet(packet_type=FINAL_ACK_B,
                seq_num=1,
                peer_ip_addr=receiver_ip,
                peer_port=receiver_port,
@@ -370,6 +384,10 @@ def SR_Receiver(conn, num_packets):
 
     print("sending final ACK to finalize HTTP transaction")
     ###############################################################
+
+
+
+
 
     ###### APP LAYER ##########
     print("SR result Packet[]")
