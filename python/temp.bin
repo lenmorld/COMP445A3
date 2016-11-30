@@ -1,18 +1,19 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Mon, 28 Nov 2016 08:44:25 GMT
+Date: Mon, 28 Nov 2016 09:59:02 GMT
 Content-Type: application/json
-Content-Length: 405
+Content-Length: 311
 Connection: close
 
 {
-    "data": "Files found\r\nFiles inside directory:\r\n['foo', 'process_http_file.py', 'cat.txt', 'upload3.txt', 'readme2', 'upload5.txt', 'bar', 'upload2.txt', 'file10kb2.txt', 'upload4.txt', 'bigfile', 'upload1.txt']",
+    "data": "Overwriting file\r\nFile exists in server... Overwriting file\r\n",
     "headers": {
         "Accept": "*/*",
+        "Content-Length": "99843",
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8040",
-    "url": "127.0.0.1:8040/"
+    "origin": "127.0.0.1:8072",
+    "url": "127.0.0.1:8072/upload6.txt"
 }
