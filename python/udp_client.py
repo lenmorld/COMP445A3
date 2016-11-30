@@ -173,7 +173,7 @@ def run_client(router_addr, router_port, server_addr, server_port, http_request)
     while True:
         if handshake.three_way_handshake(router_addr, router_port, server_addr, server_port, conn, num_packets):
             print("Client side: 3-way handshake successful"), conn
-            print("Sending HTTP Request")
+            # print("Sending HTTP Request")
             break
         else:  # loop to do three_way_handshake again
             print("3-way handshake failed")
@@ -261,8 +261,8 @@ print("===============================")
 
 http_request = httpc.construct_http_request(command, URL, headers, data, file)
 
-print("=== HTTP request ===")
-print(http_request)
-print("================================")
+# print("=== HTTP request ===")
+# print(http_request)
+# print("================================")
 
 run_client(args.routerhost, args.routerport, args.serverhost, args.serverport, http_request)

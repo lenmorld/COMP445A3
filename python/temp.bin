@@ -1,19 +1,18 @@
 
 HTTP/1.0 200 OK
 Server: COMP-445-Server
-Date: Mon, 28 Nov 2016 09:59:02 GMT
+Date: Wed, 30 Nov 2016 05:28:52 GMT
 Content-Type: application/json
-Content-Length: 311
+Content-Length: 325
 Connection: close
 
 {
-    "data": "Overwriting file\r\nFile exists in server... Overwriting file\r\n",
+    "data": "Requested file found\r\nContents of foo\r\n['apple\\n', 'android\\n', 'samsung\\n', 'toshiba\\n', 'acer\\n', '\\n', '\\n']",
     "headers": {
         "Accept": "*/*",
-        "Content-Length": "99843",
         "Host": "localhost",
         "User-Agent": "COMP-445-HTTP/1.0"
     },
-    "origin": "127.0.0.1:8072",
-    "url": "127.0.0.1:8072/upload6.txt"
+    "origin": "127.0.0.1:8073",
+    "url": "127.0.0.1:8073/foo"
 }

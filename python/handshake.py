@@ -1,3 +1,9 @@
+"""
+initial TCP handshake on CLIENT as SENDER
+who initiaites the handshake
+"""
+
+
 import argparse
 import ipaddress
 import socket
@@ -113,13 +119,12 @@ def three_way_handshake(router_addr, router_port, server_addr, server_port, conn
                 send_ctr = 0
 
                 conn.settimeout(timeout)
+                print("->sending ACK: ", my_ack, " SEQ:", my_seq_num)
 
                 while (send_ctr < 5):
 
-                    print("->sending ACK: ", my_ack, " SEQ:", my_seq_num)
-
                     conn.sendto(ack_p.to_bytes(), sender)
-                    print("ACK sent... We could also piggyback data here")
+                    # print("ACK sent... We could also piggyback data here")
                     
                     send_ctr += 1
 

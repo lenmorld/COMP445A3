@@ -1,0 +1,54 @@
+TESTED GOOD
+
+./router_x64 --max-delay=0  --drop-rate=0 --port=3001
+
+./router_x64 --max-delay=500ms  --drop-rate=0 --port=3001
+
+./router_x64 --max-delay=0  --drop-rate=0.3 --port=3001
+
+
+
+
+./router_x64 --max-delay=200ms  --drop-rate=0.2 --port=3001  [still buggy]
+
+
+
+
+server
+
+python udp_server.py -d data --port 8001
+
+
+USE CASES tested good so far
+
+
+GET listing
+python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost get / --serverport 8072
+
+GET small file
+python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost get /foo --serverport 8072
+
+
+GET big file
+python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost get /upload5.txt --serverport 8072
+
+
+POST small file
+python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost post -f f1.txt /upload_small.txt --serverport 8072
+
+
+POST big file
+python$ python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost post -f file_100kb.txt /upload6.txt --serverport 8072
+
+
+
+
+
+it worked, but sometimes dont for both drop and delay
+
+python udp_client.py --routerhost localhost --routerport 3001 --serverhost localhost post -f f1.txt /upload_small.txt --serverport 8072
+
+
+
+
+

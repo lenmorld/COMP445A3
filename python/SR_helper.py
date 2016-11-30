@@ -47,10 +47,10 @@ def prepare_SR(peer_ip, server_port, payload):
             seq_num += 1
             payload = f.read(PAYLOAD_MAX_SIZE)
 
-    print ("HTTP request|response broken into 1013-byte Packets[]")
-    for k,v in packets.items():
-        print (k, ":", sys.getsizeof(v), " bytes")
-        pprint.pprint(vars(v))
+    # print ("HTTP request|response broken into 1013-byte Packets[]")
+    # for k,v in packets.items():
+    #     print (k, ":", sys.getsizeof(v), " bytes")
+    #     pprint.pprint(vars(v))
 
 
     return packets
@@ -79,8 +79,8 @@ def SR_to_appmessage(packets):
         http_message += p.payload.decode("utf-8")
          
 
-    print("HTTP message assembled from SR:")
-    print(http_message)
+    # print("HTTP message assembled from SR:")
+    # print(http_message)
 
 
     return http_message, peer_ip, server_port
@@ -213,12 +213,11 @@ def SR_Sender(router_addr, router_port, conn, packets):
 
     send_ctr_2 = 0
 
-    while (send_ctr_2 < 5):
+    print("->sending FINAL_ACK: ", p)
 
-        print("->sending FINAL_ACK: ", p)
-        conn.sendto(p.to_bytes(), (router_addr, router_port))
-        print("FINAL_ACK sent... ")
+    while (send_ctr_2 < 5):
         
+        conn.sendto(p.to_bytes(), (router_addr, router_port))
         send_ctr_2 += 1
 
 
@@ -269,15 +268,13 @@ def SR_Receiver(conn, num_packets):
     receiver_ip = p.peer_ip_addr
     receiver_port = p.peer_port
 
-
     if packet_type == FINAL_ACK:
         print ("--- final ACK received  ---")
 
-    print(packet_type)
+    # print(packet_type)
+    # print("here")
 
-    print("here")
     # if final ACK received dont go here
-
 
     # while packet_type == DATA or packet_type == ACK_HANDSHAKE \
     #     or packet_type == ACK_LENGTH or packet_type == FINAL_ACK or packet_type == FINAL_ACK_B:
@@ -296,7 +293,8 @@ def SR_Receiver(conn, num_packets):
             #     print("---- extra FINAL_ACK_B received, ignore ---")
 
             if packet_type in [SYN,ACK, SYN_ACK, ACK_HANDSHAKE, NAK, FINAL_ACK, FINAL_ACK_B, SYN_LENGTH, SYN_ACK_LENGTH, ACK_LENGTH]:
-                print("Packet type invalid", packet_type)
+                # print("Packet type unexpected or a signal to terminate", packet_type)
+                pass
 
             else:
 
@@ -373,8 +371,8 @@ def SR_Receiver(conn, num_packets):
             if received_packets < expected_packet_num:
                 print("**** next packet ****")
                 request, sender = conn.recvfrom(1024)
-                print(request, sender)
-                print("Type of sender" ,type(sender))
+                # print(request, sender)
+                # print("Type of sender" ,type(sender))
                 if sender == None:
                     break
 
@@ -383,7 +381,7 @@ def SR_Receiver(conn, num_packets):
                 packet_type = p.packet_type
                 seq_num = p.seq_num
             else:
-                print(">> more packets expected")
+                # print(">> more packets expected")
                 break
 
         except:
@@ -394,7 +392,7 @@ def SR_Receiver(conn, num_packets):
             pass
 
 
-    print("either finish or final ACK received")
+    print(">> Either finish or final ACK received")
 
 
     # TODO: what if this final ACK is lost
@@ -419,25 +417,26 @@ def SR_Receiver(conn, num_packets):
 
     send_ctr_2 = 0
 
+    print("->sending FINAL_ACK_B: ", p)
+
     while (send_ctr_2 < 5):
 
-        print("->sending FINAL_ACK_B: ", p)
         conn.sendto(p.to_bytes(), sender)
-        print("FINAL_ACK_B sent... ")
+        # print("FINAL_ACK_B sent... ")
         
         send_ctr_2 += 1
 
     ###############################################################
 
     ###### APP LAYER ##########
-    print("SR result Packet[]")
-    print("len packets: ", len(packets_from_SR))
-    print("after SR")
-    for pp in packets_from_SR:
-        print(type(p))
-        print(p.payload)
-        print(p.seq_num)
-        print(p.peer_ip_addr)
+    print("SR result Packet[]: num of packets: ", len(packets_from_SR))
+    # print("after SR")
+
+    # for pp in packets_from_SR:
+    #     print(type(p))
+    #     print(p.payload)
+    #     print(p.seq_num)
+    #     print(p.peer_ip_addr)
 
     return packets_from_SR, sender
 

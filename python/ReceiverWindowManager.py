@@ -43,7 +43,7 @@ class ReceiverWindowManager:
                 print("Actual receive")
                 self.sequenceArray[sequenceNumber] = True
                 self.bufferArray[index] = buf
-                print("")
+                # print("")
             else:
                 print("need to resend ACK")
                 self.outOfOrder =True
@@ -66,7 +66,7 @@ class ReceiverWindowManager:
     def moveWindow(self):
         print("in move window")
         pprint.pprint(self.bufferArray)
-        print("did not make it to good part of move window yet")
+        # print("did not make it to good part of move window yet")
         result = []
         while(self.sequenceArray[self.windowStart]):
             print("moving the actual window")

@@ -92,8 +92,7 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
         his_seq_num = length_handshake_packet.seq_num
         # get ack from payload
 
-        print("LENGTH P PAYLOAD")
-        print(l_hs_payload)
+        # print("Length packet payload: ", l_hs_payload)
         # input()
 
         dict_payload = json.loads(l_hs_payload)
@@ -139,17 +138,17 @@ def length_handshake(len_packets, peer_ip, peer_port, conn, sender):
                 print("sending ACK_LENGTH: ", my_ack, " SEQ:", my_seq_num)
 
                 conn.sendto(ack_p.to_bytes(), sender)
-                print("ACK_LENGTH sent")
+                # print("ACK_LENGTH sent")
 
                 send_ctr = 0
                 conn.settimeout(timeout)
 
                 while (send_ctr < 5):
 
-                    print("->sending ACK_LENGTH: ", ack_p, " SEQ:", my_seq_num)
+                    # print("->sending ACK_LENGTH: ", ack_p, " SEQ:", my_seq_num)
 
                     conn.sendto(ack_p.to_bytes(), sender)
-                    print("ACK_LENGTH sent... ")
+                    # print("ACK_LENGTH sent... ")
                     
                     send_ctr += 1
 
@@ -194,12 +193,12 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
 
     # assume at this point we have HTTP request
     print("===== HTTP request received ======")
-    print(http_request)
+    # print(http_request)
     print("-> sending http response")
 
     # formulate response by invoking httpfs
     http_response  = process_http_file.process_Req(http_request, address, port, directory, isVerb)
-    print(http_response)
+    # print(http_response)
 
     packets = SR_helper.prepare_SR(peer_ip, peer_port, http_response)
 
@@ -210,7 +209,7 @@ def process_http_request(conn, host, port, data, directory, sender, isVerb, num_
             print("ACK LENGTH Successfully sent to Client")
             break
         else:
-            print('Length handshake failed. Repeat handshake')
+            print('Length handshake failed. Repeat LENGTH handshake')
 
     # since response length is communicated to client, start sending packets
     # transition to a sender and send HTTP response through SR
